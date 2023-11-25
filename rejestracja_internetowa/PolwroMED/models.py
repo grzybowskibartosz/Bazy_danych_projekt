@@ -1,4 +1,6 @@
 from django.db import models
+from django.utils import timezone
+
 
 class Pacjent(models.Model):
     id = models.AutoField(primary_key=True)
@@ -6,8 +8,8 @@ class Pacjent(models.Model):
     nazwisko = models.CharField(max_length=50)
     pesel = models.CharField(max_length=11, unique=True)
     data_urodzenia = models.DateField()
-    adres = models.TextField()(max_length=256)
-    inne_informacje = models.TextField()(max_length=3000)
+    adres = models.TextField(max_length=256)  # Poprawione
+    inne_informacje = models.TextField(max_length=3000)
 
     def __str__(self):
         return f'{self.imie} {self.nazwisko}'
