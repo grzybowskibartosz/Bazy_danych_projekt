@@ -39,6 +39,7 @@ class Wizyta(models.Model):
         # Dodaj inne statusy według potrzeb
     ]
     status = models.CharField(max_length=20, choices=STATUS_CHOICES)
+    gabinet = models.ForeignKey(Gabinet, on_delete=models.CASCADE)
     diagnoza = models.TextField(blank=True)
     przepisane_leki = models.TextField(blank=True)
     notatki_lekarza = models.TextField(blank=True)
@@ -53,13 +54,16 @@ class Wizyta(models.Model):
         if zajete_terminy.exists():
             raise ValidationError('Lekarz jest zajęty w podanym terminie.')
 
-       # Sprawdź, czy gabinet jest dostępny w podanym terminie
+        # Sprawdź, czy gabinet jest dostępny w podanym terminie
+
         zajete_terminy_gabinetu = Wizyta.objects.filter(
-            lekarz=self.lekarz,
-            data_i_godzina__date=self.data_i_godzina.date(),
-            status='Zaplanowana',
-            gabinet=self.gabinet
+            gabinet=self.gabinet,
+            data_i_godzina=self.data_i_godzina,
+            status='Zaplanowana'
         )
+
+        if zajete_terminy_gabinetu.exists():
+            raise ValidationError('Gabinet jest zajęty w podanym terminie.')
 
         if zajete_terminy_gabinetu.exists():
             raise ValidationError('Gabinet jest zajęty w podanym terminie.')
