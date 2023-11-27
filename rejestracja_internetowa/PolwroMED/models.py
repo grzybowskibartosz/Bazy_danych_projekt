@@ -20,6 +20,8 @@ class Lekarz(models.Model):
     nazwisko = models.CharField(max_length=50)
     specjalizacja = models.CharField(max_length=50)
 
+    gabinety = models.ManyToManyField('Gabinet', related_name='lekarze_gabinetow')
+
     def __str__(self):
         return f'{self.imie} {self.nazwisko} - {self.specjalizacja}'
 
@@ -50,10 +52,12 @@ class Wizyta(models.Model):
 class Gabinet(models.Model):
     id = models.AutoField(primary_key=True)
     lekarz = models.ForeignKey(Lekarz, on_delete=models.CASCADE)
-    numer_gabinetu = models.CharField(max_length=10)
+    numer_gabinetu = models.CharField(max_length=10, unique =True)
     specjalizacja = models.CharField(max_length=100)
     opis_gabinetu = models.TextField(blank=True, null=True)
     status_dostepnosci = models.BooleanField(default=True)
+
+    lekarze = models.ManyToManyField('Lekarz', related_name='gabinety_lekarzy')
 
     def __str__(self):
         return self.numer_gabinetu
