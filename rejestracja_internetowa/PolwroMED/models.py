@@ -42,7 +42,21 @@ class Wizyta(models.Model):
     przepisane_leki = models.TextField()
     notatki_lekarza = models.TextField()
 
+    def clean(self):
+        # Sprawdź, czy lekarz jest dostępny w podanym terminie
+        zajete_terminy = Wizyta.objects.filter(
+            lekarz=self.lekarz,
+            data_i_godzina__date=self.data_i_godzina.date(),
+            czas_wizyty=self.czas_wizyty,
+            status='Zaplanowana'
+        )
 
+        if zajete_terminy.exists():
+            raise ValidationError('Lekarz jest zajęty w podanym terminie.')
+
+    def save(self, *args, **kwargs):
+        self.full_clean()  # Wywołanie metody clean przed zapisem
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f'Wizyta u {self.lekarz} przez {self.pacjent} dnia {self.data_i_godzina}'
@@ -50,7 +64,7 @@ class Wizyta(models.Model):
 class Gabinet(models.Model):
     id = models.AutoField(primary_key=True)
     lekarz = models.ForeignKey(Lekarz, on_delete=models.CASCADE)
-    numer_gabinetu = models.CharField(max_length=10)
+    numer_gabinetu = models.CharField(max_length=10, unique=True)
     specjalizacja = models.CharField(max_length=100)
     opis_gabinetu = models.TextField(blank=True, null=True)
     status_dostepnosci = models.BooleanField(default=True)
