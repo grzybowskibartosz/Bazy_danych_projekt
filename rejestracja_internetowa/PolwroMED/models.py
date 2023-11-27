@@ -67,11 +67,6 @@ class Wizyta(models.Model):
         if self.status == 'Odbyta' and not self.przepisane_leki:
             raise ValidationError('Pole "Przepisane leki" jest wymagane dla wizyty odbytej.')
 
-
-
-        def save(self, *args, **kwargs):
-            self.full_clean()  # Wywołanie metody clean przed zapisem
-            super().save(*args, **kwargs)
     def save(self, *args, **kwargs):
         self.full_clean()  # Wywołanie metody clean przed zapisem
         super().save(*args, **kwargs)
