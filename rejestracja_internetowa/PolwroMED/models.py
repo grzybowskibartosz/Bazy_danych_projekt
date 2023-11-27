@@ -62,7 +62,7 @@ class Wizyta(models.Model):
         # Sprawdź, czy lekarz jest dostępny w podanym terminie tylko dla nowych wizyt
         if self._state.adding and self.status == 'Zaplanowana':
             zajete_terminy_lekarza = Wizyta.objects.filter(
-                lekarz=self.lekarz,
+                lekarz_id=self.lekarz_id,
                 data_i_godzina=self.data_i_godzina,
                 status='Zaplanowana'
             )
@@ -89,21 +89,29 @@ class Wizyta(models.Model):
         if self.data_i_godzina and self.data_i_godzina < timezone.now():
             raise ValidationError("Wizyty można umawiać tylko na przyszłość.")
 
-        # Sprawdź, czy nie ma innej wizyty w tym samym gabinecie i u tego samego lekarza
+        # Sprawdź, czy nie ma innej wizyty w tym samym gabinecie
         if not self._state.adding:  # Sprawdzenie tylko dla edytowanej wizyty
-            kolidujace_wizyty = Wizyta.objects.filter(
-                gabinet=self.gabinet,
-                lekarz=self.lekarz,
+            kolidujace_wizyty_gabinet = Wizyta.objects.filter(
+                gabinet_id=self.gabinet_id,
                 data_i_godzina=self.data_i_godzina,
                 status='Zaplanowana'
             ).exclude(pk=self.pk)  # Wyklucz obecną wizytę
 
-            if kolidujace_wizyty.exists():
-                raise ValidationError(
-                    'Edycja wizyty spowoduje kolizję z inną wizytą w tym samym gabinecie i u tego samego lekarza.')
+            if kolidujace_wizyty_gabinet.exists():
+                raise ValidationError('Edycja wizyty spowoduje kolizję z inną wizytą w tym samym gabinecie.')
 
+        # Sprawdź, czy nie ma innej wizyty u tego samego lekarza
+        if not self._state.adding:  # Sprawdzenie tylko dla edytowanej wizyty
+            kolidujace_wizyty_lekarz = Wizyta.objects.filter(
+                lekarz_id=self.lekarz_id,
+                data_i_godzina=self.data_i_godzina,
+                status='Zaplanowana'
+            ).exclude(pk=self.pk)  # Wyklucz obecną wizytę
 
-def save(self, *args, **kwargs):
+            if kolidujace_wizyty_lekarz.exists():
+                raise ValidationError('Edycja wizyty spowoduje kolizję z inną wizytą u tego samego lekarza.')
+
+    def save(self, *args, **kwargs):
         self.full_clean()  # Wywołanie metody clean przed zapisem
         super().save(*args, **kwargs)
 
