@@ -89,17 +89,21 @@ class Wizyta(models.Model):
         if self.data_i_godzina and self.data_i_godzina < timezone.now():
             raise ValidationError("Wizyty można umawiać tylko na przyszłość.")
 
-        # Sprawdź, czy nie ma innej wizyty w tym samym czasie
-        if self._state.adding:  # Sprawdzenie tylko dla nowo tworzonej wizyty
+        # Sprawdź, czy nie ma innej wizyty w tym samym gabinecie i u tego samego lekarza
+        if not self._state.adding:  # Sprawdzenie tylko dla edytowanej wizyty
             kolidujace_wizyty = Wizyta.objects.filter(
+                gabinet=self.gabinet,
+                lekarz=self.lekarz,
                 data_i_godzina=self.data_i_godzina,
                 status='Zaplanowana'
             ).exclude(pk=self.pk)  # Wyklucz obecną wizytę
 
             if kolidujace_wizyty.exists():
-                raise ValidationError('Wizyta koliduje z inną wizytą w tym samym czasie.')
+                raise ValidationError(
+                    'Edycja wizyty spowoduje kolizję z inną wizytą w tym samym gabinecie i u tego samego lekarza.')
 
-    def save(self, *args, **kwargs):
+
+def save(self, *args, **kwargs):
         self.full_clean()  # Wywołanie metody clean przed zapisem
         super().save(*args, **kwargs)
 
