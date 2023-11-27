@@ -61,6 +61,9 @@ class Wizyta(models.Model):
             gabinet=self.gabinet
         )
 
+        if zajete_terminy_gabinetu.exists():
+            raise ValidationError('Gabinet jest zajęty w podanym terminie.')
+
         if self.status == 'Odbyta' and not self.diagnoza:
             raise ValidationError('Pole "Diagnoza" jest wymagane dla wizyty odbytej.')
 
