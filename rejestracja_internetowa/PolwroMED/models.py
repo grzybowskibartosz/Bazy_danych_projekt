@@ -45,28 +45,27 @@ class Wizyta(models.Model):
     notatki_lekarza = models.TextField(blank=True)
 
     def clean(self):
-        # Sprawdź, czy lekarz jest dostępny w podanym terminie czy gabinet jest dostepny
-        zajete_terminy = Wizyta.objects.filter(
-            lekarz=self.lekarz,
-            data_i_godzina__date=self.data_i_godzina.date(),
-            status='Zaplanowana'
-        )
-        if zajete_terminy.exists():
-            raise ValidationError('Lekarz jest zajęty w podanym terminie.')
+        # Sprawdź, czy lekarz jest dostępny w podanym terminie tylko dla nowych wizyt
+        if self._state.adding and self.status == 'Zaplanowana':
+            zajete_terminy_lekarza = Wizyta.objects.filter(
+                lekarz=self.lekarz,
+                data_i_godzina=self.data_i_godzina,
+                status='Zaplanowana'
+            )
+            if zajete_terminy_lekarza.exists():
+                raise ValidationError('Lekarz jest zajęty w podanym terminie.')
 
         # Sprawdź, czy gabinet jest dostępny w podanym terminie
 
-        zajete_terminy_gabinetu = Wizyta.objects.filter(
-            gabinet=self.gabinet,
-            data_i_godzina=self.data_i_godzina,
-            status='Zaplanowana'
-        )
-
-        if zajete_terminy_gabinetu.exists():
-            raise ValidationError('Gabinet jest zajęty w podanym terminie.')
-
-        if zajete_terminy_gabinetu.exists():
-            raise ValidationError('Gabinet jest zajęty w podanym terminie.')
+        # Sprawdź, czy gabinet jest dostępny w podanym terminie tylko dla nowych wizyt
+        if self._state.adding and self.status == 'Zaplanowana':
+            zajete_terminy_gabinetu = Wizyta.objects.filter(
+                gabinet_id=self.gabinet_id,
+                data_i_godzina=self.data_i_godzina,
+                status='Zaplanowana'
+            )
+            if zajete_terminy_gabinetu.exists():
+                raise ValidationError('Gabinet jest zajęty w podanym terminie.')
 
         if self.status == 'Odbyta' and not self.diagnoza:
             raise ValidationError('Pole "Diagnoza" jest wymagane dla wizyty odbytej.')
