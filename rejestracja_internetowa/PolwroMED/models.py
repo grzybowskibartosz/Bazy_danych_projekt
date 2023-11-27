@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 
 class Pacjent(models.Model):
@@ -43,16 +44,27 @@ class Wizyta(models.Model):
     notatki_lekarza = models.TextField()
 
     def clean(self):
-        # Sprawdź, czy lekarz jest dostępny w podanym terminie
+        # Sprawdź, czy lekarz jest dostępny w podanym terminie czy gabinet jest dostepny
         zajete_terminy = Wizyta.objects.filter(
             lekarz=self.lekarz,
             data_i_godzina__date=self.data_i_godzina.date(),
             czas_wizyty=self.czas_wizyty,
             status='Zaplanowana'
         )
-
         if zajete_terminy.exists():
             raise ValidationError('Lekarz jest zajęty w podanym terminie.')
+
+       # Sprawdź, czy gabinet jest dostępny w podanym terminie
+        zajete_terminy_gabinetu = Wizyta.objects.filter(
+            lekarz=self.lekarz,
+            data_i_godzina__date=self.data_i_godzina.date(),
+            czas_wizyty=self.czas_wizyty,
+            status='Zaplanowana',
+            gabinet=self.gabinet
+        )
+
+        if zajete_terminy_gabinetu.exists():
+            raise ValidationError('Gabinet jest zajęty w podanym terminie.')
 
     def save(self, *args, **kwargs):
         self.full_clean()  # Wywołanie metody clean przed zapisem
