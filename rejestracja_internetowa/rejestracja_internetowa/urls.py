@@ -22,4 +22,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('PolwroMED.urls')),
     path('', include('PolwroMED.urls')),
+    path('registration', include('PolwroMED.urls')),
 ]
