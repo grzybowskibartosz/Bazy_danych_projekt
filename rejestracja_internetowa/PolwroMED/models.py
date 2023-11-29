@@ -111,6 +111,18 @@ class Wizyta(models.Model):
             if kolidujace_wizyty_lekarz.exists():
                 raise ValidationError('Edycja wizyty spowoduje kolizję z inną wizytą u tego samego lekarza.')
 
+        # Sprawdź, czy pacjent nie ma już innej zaplanowanej wizyty w tym samym czasie
+        if self.status == 'Zaplanowana':
+            kolidujace_wizyty_pacjent = Wizyta.objects.filter(
+                pacjent_id=self.pacjent_id,
+                data_i_godzina=self.data_i_godzina,
+                status='Zaplanowana'
+            ).exclude(pk=self.pk)  # Wyklucz obecną edytowaną wizytę
+
+            if kolidujace_wizyty_pacjent.exists():
+                raise ValidationError('Pacjent ma już zaplanowaną inną wizytę w tym samym czasie.')
+
+
     def save(self, *args, **kwargs):
         self.full_clean()  # Wywołanie metody clean przed zapisem
         super().save(*args, **kwargs)
