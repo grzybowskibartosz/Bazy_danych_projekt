@@ -1,10 +1,10 @@
 from django.urls import path
-from .views import registration, PacjentListCreateView, PacjentDetailView, LekarzListCreateView, LekarzDetailView, WizytaListCreateView, WizytaDetailView, GabinetListCreateView, GabinetDetailView;
+from .views import PacjentListCreateView, PacjentDetailView, LekarzListCreateView, LekarzDetailView, WizytaListCreateView, WizytaDetailView, GabinetListCreateView, GabinetDetailView,\
+    RejestracjaView
 
 
 
 urlpatterns = [
-    path('registration', registration, name='registration'),
 
 # Trasy dla Pacjenta
     path('api/pacjenci/', PacjentListCreateView.as_view(), name='pacjent-list-create'),
@@ -21,6 +21,8 @@ urlpatterns = [
     # Trasy dla Wizyty
     path('api/wizyty/', WizytaListCreateView.as_view(), name='wizyta-list-create'),
     path('api/wizyty/<int:pk>/', WizytaDetailView.as_view(), name='wizyta-detail'),
+
+    path('api/rejestracja/', RejestracjaView.as_view(), name='rejestracja'),
 
 ]
 

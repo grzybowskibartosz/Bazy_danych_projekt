@@ -5,18 +5,14 @@ from django.contrib import messages
 from .forms import RegistrationForm
 from rest_framework import generics
 from .serializers import PacjentSerializer, LekarzSerializer, GabinetSerializer, WizytaSerializer
-def registration(request):
-    if request.method == 'POST':
-        form = RegistrationForm(request.POST)
-        if form.is_valid():
-            form.save()
-            username = form.cleaned_data.get('username')
-            messages.success(request,f'Konto {username} zostało utworzone! Możesz się zalogować')
+from django.contrib.auth import get_user_model
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 
-        else:
-            form = RegistrationForm()
+from rest_framework.views import APIView
 
-        return render(request,'registration/registration.html', {'form': form})
 
 
 class PacjentListCreateView(generics.ListCreateAPIView):
@@ -50,5 +46,35 @@ class WizytaListCreateView(generics.ListCreateAPIView):
 class WizytaDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Wizyta.objects.all()
     serializer_class = WizytaSerializer
+
+
+User = get_user_model()
+
+# @api_view(['POST'])
+# @permission_classes([AllowAny])
+# def rejestracja_pacjenta(request):
+#     serializer = PacjentSerializer(data=request.data)
+#     if serializer.is_valid():
+#         user = User.objects.create_user(
+#             username=serializer.validated_data['email'],
+#             password=serializer.validated_data['haslo'],
+#             email=serializer.validated_data['email'],
+#         )
+#         serializer.save(user=user)
+#         return Response(serializer.data, status=status.HTTP_201_CREATED)
+#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class RejestracjaView(APIView):
+    def post(self, request, *args, **kwargs):
+        serializer = PacjentSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
 
 
