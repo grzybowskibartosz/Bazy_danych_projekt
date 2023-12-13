@@ -1,19 +1,43 @@
 from django.db import models
 from django.utils import timezone
 from django.core.exceptions import ValidationError
+from django.core.validators import MinLengthValidator, MaxLengthValidator, RegexValidator
+from datetime import date, timedelta
 
+
+
+def validate_birthdate(value):
+    if value >= date.today():
+        raise ValidationError("Data urodzenia nie może być z przyszłości.")
+
+def validate_age(value):
+    today = date.today()
+    age = today.year - value.year - ((today.month, today.day) < (value.month, value.day))
+    if age > 130:
+        raise ValidationError("Wiek pacjenta nie może przekraczać 150 lat.")
+
+def validate_pesel(value):
+    if not value.isdigit():
+        raise ValidationError("PESEL powinien zawierać tylko cyfry.")
 
 class Pacjent(models.Model):
     id = models.AutoField(primary_key=True)
     imie = models.CharField(max_length=50)
     nazwisko = models.CharField(max_length=50)
-    pesel = models.CharField(max_length=11, unique=True)
-    data_urodzenia = models.DateField()
-    adres = models.TextField(max_length=256)  # Poprawione
-    inne_informacje = models.TextField(max_length=3000)
+    pesel = models.CharField(
+        max_length=11,
+        unique=True,
+        validators=[MinLengthValidator(limit_value=11, message='PESEL musi mieć dokładnie 11 cyfr.'),
+                    MaxLengthValidator(limit_value=11, message='PESEL musi mieć dokładnie 11 cyfr.'),
+                    RegexValidator(regex=r'^\d*$', message='PESEL może zawierać tylko cyfry.'),]
+    )
+    data_urodzenia = models.DateField(validators=[validate_birthdate, validate_age])
+    adres = models.TextField(max_length=256)
+    inne_informacje = models.TextField(max_length=3000,blank=True, null=True)
+
 
     def __str__(self):
-        return f'{self.imie} {self.nazwisko}'
+        return f'{self.imie} {self.nazwisko} {self.pesel} {self.data_urodzenia} {self.adres}'
 
 class Lekarz(models.Model):
     id = models.AutoField(primary_key=True)
@@ -28,13 +52,13 @@ class Lekarz(models.Model):
 
 class Gabinet(models.Model):
     id = models.AutoField(primary_key=True)
-    lekarz = models.ForeignKey(Lekarz, on_delete=models.CASCADE)
+    #lekarz = models.ForeignKey(Lekarz, on_delete=models.CASCADE, null=True, blank=True)
     numer_gabinetu = models.CharField(max_length=10, unique=True)
     specjalizacja = models.CharField(max_length=100)
     opis_gabinetu = models.TextField(blank=True, null=True)
     status_dostepnosci = models.BooleanField(default=True)
 
-    lekarze = models.ManyToManyField('Lekarz', related_name='gabinety_lekarzy')
+    lekarze = models.ManyToManyField('Lekarz', related_name='gabinety_lekarzy', blank=True)
 
     def __str__(self):
         return self.numer_gabinetu

@@ -1,16 +1,14 @@
-import logo from './logo.svg';
-import './App.css';
-import React from'react';
-import TestComponent from './TestComponent';
+// App.js
+import React from 'react';
+import PacjentList from './PacjentList';
 
-function App() {
+const App = () => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <TestComponent />
-      </header>
+    <div>
+      <h1>Moja Aplikacja Medyczna</h1>
+      <PacjentList />
     </div>
   );
-}
+};
 
 export default App;

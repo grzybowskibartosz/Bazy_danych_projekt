@@ -28,6 +28,7 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 # Application definition
+CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Dodaj adres swojego frontendu
@@ -42,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'PolwroMED',
     'corsheaders',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -82,8 +84,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'users_info',
-        'USER': 'admin',
-        'PASSWORD': 'admin',
+        'USER': 'root',
+        'PASSWORD': 'root',
         'HOST': 'localhost',
         'PORT': '3306',
     }
