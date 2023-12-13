@@ -1,12 +1,30 @@
-// App.js
+// /src/App.js
 import React from 'react';
-import PacjentList from './PacjentList';
+import PacjentList from './components/PacjentList';
+import LekarzList from './components/LekarzList';
+import GabinetList from './components/GabinetList';
+import WizytaList from './components/WizytaList';
 
 const App = () => {
   return (
     <div>
       <h1>Moja Aplikacja Medyczna</h1>
-      <PacjentList />
+
+      <div>
+        <PacjentList />
+      </div>
+
+      <div>
+        <LekarzList />
+      </div>
+
+      <div>
+        <GabinetList />
+      </div>
+
+      <div>
+        <WizytaList />
+      </div>
     </div>
   );
 };
