@@ -1,16 +1,17 @@
-import logo from './logo.svg';
-import './App.css';
-import React from'react';
-import TestComponent from './TestComponent';
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import HomePage from './HomePage';
 import Rejestracja from './Rejestracja';
 
-
 function App() {
   return (
-    <div className="App">
-        <Rejestracja />
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/rejestracja" element={<Rejestracja />} />
+        {/* Dodaj inne trasy, jeśli są dostępne */}
+      </Routes>
+    </Router>
   );
 }
 
