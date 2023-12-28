@@ -5,6 +5,7 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import { styled } from '@mui/system';
+
 // ustalamy kolor tła
 const StyledAppBar = styled(AppBar)({
   backgroundColor: '#26a197',
@@ -38,7 +39,7 @@ const HomePage = () => {
           <Typography variant="h6">PolwroMED</Typography>
           <StyledButtonsContainer>
             {/* Użyj Link do nawigacji do nowej strony */}
-            <Button color="inherit" component={Link} to="/logowanie">
+            <Button color="inherit" component={Link} to="/login">
               Logowanie
             </Button>
             <Button color="inherit" component={Link} to="/rejestracja">

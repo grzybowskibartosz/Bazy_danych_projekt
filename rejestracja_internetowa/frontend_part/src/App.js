@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import HomePage from './HomePage';
 import Rejestracja from './Rejestracja';
+import Login from './Login';
 
 function App() {
   return (
@@ -9,6 +10,7 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/rejestracja" element={<Rejestracja />} />
+        <Route path="/login" element={<Login />} />
         {/* Dodaj inne trasy, jeśli są dostępne */}
       </Routes>
     </Router>
