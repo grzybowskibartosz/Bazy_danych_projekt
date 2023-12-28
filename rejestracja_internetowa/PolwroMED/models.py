@@ -1,22 +1,19 @@
-from django.db import models
 from django.utils import timezone
-from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import MinLengthValidator, MaxLengthValidator, RegexValidator
-from datetime import date, timedelta
-
+from datetime import date
+from django.contrib.auth.models import User
+from django.db import models
 
 
 def validate_birthdate(value):
     if value >= date.today():
         raise ValidationError("Data urodzenia nie może być z przyszłości.")
-
 def validate_age(value):
     today = date.today()
     age = today.year - value.year - ((today.month, today.day) < (value.month, value.day))
     if age > 130:
         raise ValidationError("Wiek pacjenta nie może przekraczać 150 lat.")
-
 def validate_pesel(value):
     if not value.isdigit():
         raise ValidationError("PESEL powinien zawierać tylko cyfry.")
@@ -25,6 +22,7 @@ class Pacjent(models.Model):
     id = models.AutoField(primary_key=True)
     imie = models.CharField(max_length=50)
     nazwisko = models.CharField(max_length=50)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='pacjent', null=True, blank=True)
     pesel = models.CharField(
         max_length=11,
         unique=True,
@@ -50,7 +48,6 @@ class Lekarz(models.Model):
 
     def __str__(self):
         return f'{self.imie} {self.nazwisko} - {self.specjalizacja}'
-
 class Gabinet(models.Model):
     id = models.AutoField(primary_key=True)
     #lekarz = models.ForeignKey(Lekarz, on_delete=models.CASCADE, null=True, blank=True)
@@ -63,8 +60,6 @@ class Gabinet(models.Model):
 
     def __str__(self):
         return self.numer_gabinetu
-
-
 class Wizyta(models.Model):
     id = models.AutoField(primary_key=True)
     data_i_godzina = models.DateTimeField(default=timezone.now)
@@ -154,5 +149,3 @@ class Wizyta(models.Model):
 
     def __str__(self):
         return f'Wizyta u {self.lekarz} przez {self.pacjent} dnia {self.data_i_godzina} w gabinecie {self.gabinet}'
-
-

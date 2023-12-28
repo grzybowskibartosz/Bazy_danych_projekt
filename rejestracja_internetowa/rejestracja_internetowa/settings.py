@@ -33,6 +33,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Dodaj adres swojego frontendu
 ]
 
+AUTH_USER_MODEL = 'auth.User'
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',

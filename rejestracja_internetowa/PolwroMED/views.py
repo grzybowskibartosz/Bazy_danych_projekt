@@ -1,14 +1,11 @@
-from django.http import JsonResponse
 from .models import Pacjent, Lekarz, Wizyta, Gabinet
 from rest_framework import generics
-from .serializers import PacjentSerializer, LekarzSerializer, GabinetSerializer, WizytaSerializer, UserSerializer
+from .serializers import PacjentSerializer, LekarzSerializer, GabinetSerializer, WizytaSerializer, UserSerializer, \
+                         LekarzSerializer
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.response import Response
-
-
 from rest_framework.views import APIView
-
 
 
 class PacjentListCreateView(generics.ListCreateAPIView):
@@ -82,3 +79,9 @@ class RejestracjaView(APIView):
         except Exception as e:
             print("Exception:", str(e))
             return Response({'error': 'Internal Server Error'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class NasiLekarzeView(APIView):
+    def get(self, request, *args, **kwargs):
+        lekarze = Lekarz.objects.all()
+        serializer = LekarzSerializer(lekarze, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

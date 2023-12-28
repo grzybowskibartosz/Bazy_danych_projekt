@@ -4,6 +4,23 @@ import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import { styled } from '@mui/system';
+import { Link } from 'react-router-dom';
+import AppBar from '@mui/material/AppBar';
+import Toolbar from '@mui/material/Toolbar';
+
+const StyledAppBar = styled(AppBar)({
+  backgroundColor: '#26a197',
+});
+
+const StyledToolbar = styled(Toolbar)({
+  display: 'flex',
+  justifyContent: 'space-between',
+});
+
+const StyledButtonsContainer = styled('div')({
+  display: 'flex',
+  gap: '8px',
+});
 
 const StyledFormContainer = styled('div')({
   width: '50%',
@@ -21,7 +38,6 @@ const StyledButton = styled(Button)({
   marginTop: '16px',
   backgroundColor: '#26a197'
 });
-
 const Rejestracja = () => {
   const [etapRejestracji, setEtapRejestracji] = useState(1);
   const [nowyPacjent, setNowyPacjent] = useState({
@@ -68,6 +84,27 @@ const Rejestracja = () => {
     switch (etapRejestracji) {
       case 1:
         return (
+        <div>
+          <StyledAppBar position="static">
+            <StyledToolbar>
+              <Typography variant="h6">PolwroMED</Typography>
+              <StyledButtonsContainer>
+                <Button color="inherit" component={Link} to="/">
+                    Strona Główna
+                </Button>
+                <Button color="inherit" component={Link} to="/logowanie">
+                  Logowanie
+                </Button>
+                <Button color="inherit" component={Link} to="/rejestracja">
+                  Rejestracja
+                </Button>
+                <Button color="inherit" component={Link} to="/nasi-lekarze">
+                  Nasi lekarze
+                </Button>
+              </StyledButtonsContainer>
+            </StyledToolbar>
+          </StyledAppBar>
+
           <StyledFormContainer>
             <Typography variant="h5">Rejestracja Pacjenta - Etap 1</Typography>
             <StyledForm>
@@ -137,6 +174,7 @@ const Rejestracja = () => {
               </StyledButton>
             </StyledForm>
           </StyledFormContainer>
+        </div>
         );
       case 2:
         return (
@@ -145,7 +183,7 @@ const Rejestracja = () => {
               Rejestracja Pacjenta - Potwierdzenie
             </Typography>
             <Typography variant="body1">
-              Dziękujemy za rejestrację!
+              Dziękujemy za rejestrację! Możesz teraz przejść do <Link to="/logowanie">strony logowania</Link>.
             </Typography>
             {/* Możesz dodać przycisk do przekierowania na stronę logowania */}
           </div>

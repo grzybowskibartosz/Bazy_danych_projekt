@@ -44,6 +44,9 @@ const HomePage = () => {
             <Button color="inherit" component={Link} to="/rejestracja">
               Rejestracja
             </Button>
+            <Button color="inherit" component={Link} to="/nasi-lekarze">
+              Nasi lekarze
+            </Button>
           </StyledButtonsContainer>
         </StyledToolbar>
       </StyledAppBar>

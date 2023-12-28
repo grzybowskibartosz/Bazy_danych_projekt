@@ -1,22 +1,43 @@
 # serializers.py
 from rest_framework import serializers
 from .models import Pacjent, Lekarz, Gabinet, Wizyta
-from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password']
 
 class PacjentSerializer(serializers.ModelSerializer):
+    user = UserSerializer(write_only=True)  # Dodaj to pole
+    email = serializers.EmailField()
+    haslo = serializers.CharField(write_only=True)
     class Meta:
         model = Pacjent
         fields = '__all__'
 
-        def create(self, validated_data):
-            user_data = validated_data.pop('user')
-            user_serializer = UserSerializer(data=user_data)
-            if user_serializer.is_valid():
-                user = user_serializer.save()
-                pacjent = Pacjent.objects.create(user=user, **validated_data)
-                return pacjent
-            else:
-                raise serializers.ValidationError({'user': user_serializer.errors})
+    def create(self, validated_data):
+        # Wydziel dane dotyczące użytkownika
+        user_data = {
+            'username': validated_data['email'],
+            'email': validated_data['email'],
+            'password': validated_data['haslo'],
+        }
+
+        # Usuń pola 'email' i 'haslo' z danych dotyczących pacjenta
+        del validated_data['email']
+        del validated_data['haslo']
+
+        # Stwórz użytkownika i przypisz go do pola 'user' pacjenta
+        user = User.objects.create_user(**user_data)
+        validated_data['user'] = user
+
+        # Stwórz pacjenta
+        pacjent = Pacjent.objects.create(**validated_data)
+
+        return pacjent
+
 class LekarzSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lekarz
@@ -31,16 +52,3 @@ class WizytaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Wizyta
         fields = '__all__'
-
-
-User = get_user_model()
-
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'password')
-        extra_kwargs = {'password': {'write_only': True}}
-
-    def create(self, validated_data):
-        user = User.objects.create_user(**validated_data)
-        return user
