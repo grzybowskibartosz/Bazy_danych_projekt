@@ -49,12 +49,20 @@ const Rejestracja = () => {
         // Przekieruj użytkownika na stronę logowania lub potwierdzenia rejestracji
         setEtapRejestracji(2);
       })
-      .catch((error) =>{
+      .catch((error) => {
         console.error('Błąd rejestracji pacjenta:', error);
-        console.error('Response data:', error.response.data);
+
+        // Sprawdź, czy istnieje odpowiedź od serwera
+        if (error.response) {
+          console.error('Response data:', error.response.data);
+        } else {
+          console.error('Brak odpowiedzi od serwera');
         }
-      );
+
+        // Tutaj możesz dodać dodatkową obsługę błędu, np. wyświetlenie komunikatu dla użytkownika
+      });
   };
+
 
   const renderujEtapRejestracji = () => {
     switch (etapRejestracji) {

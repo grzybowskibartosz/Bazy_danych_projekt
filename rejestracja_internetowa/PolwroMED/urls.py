@@ -4,7 +4,7 @@ from .views import PacjentListCreateView, PacjentDetailView, LekarzListCreateVie
 
 urlpatterns = [
 
-# Trasy dla Pacjenta
+    # Trasy dla Pacjenta
     path('api/pacjenci/', PacjentListCreateView.as_view(), name='pacjent-list-create'),
     path('api/pacjenci/<int:pk>/', PacjentDetailView.as_view(), name='pacjent-detail'),
 

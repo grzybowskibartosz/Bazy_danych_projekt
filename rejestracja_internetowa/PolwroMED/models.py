@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import MinLengthValidator, MaxLengthValidator, RegexValidator
 from datetime import date, timedelta
@@ -34,10 +35,10 @@ class Pacjent(models.Model):
     data_urodzenia = models.DateField(validators=[validate_birthdate, validate_age])
     adres = models.TextField(max_length=256)
     inne_informacje = models.TextField(max_length=3000,blank=True, null=True)
-
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null = True, default = None)
 
     def __str__(self):
-        return f'{self.imie} {self.nazwisko} {self.pesel} {self.data_urodzenia} {self.adres}'
+        return f'{self.imie} {self.nazwisko} {self.pesel} {self.data_urodzenia} {self.adres} ({self.user.username})'
 
 class Lekarz(models.Model):
     id = models.AutoField(primary_key=True)
