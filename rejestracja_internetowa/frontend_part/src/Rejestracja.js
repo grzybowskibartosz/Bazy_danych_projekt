@@ -7,6 +7,7 @@ import { styled } from '@mui/system';
 import { Link } from 'react-router-dom';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
+import logo from './logo.png';
 
 const StyledAppBar = styled(AppBar)({
   backgroundColor: '#26a197',
@@ -14,12 +15,13 @@ const StyledAppBar = styled(AppBar)({
 
 const StyledToolbar = styled(Toolbar)({
   display: 'flex',
-  justifyContent: 'space-between',
+  justifyContent: 'flex start',
 });
 
 const StyledButtonsContainer = styled('div')({
   display: 'flex',
-  gap: '8px',
+  gap: '10px',
+  marginLeft: 'auto',
 });
 
 const StyledFormContainer = styled('div')({
@@ -38,6 +40,12 @@ const StyledButton = styled(Button)({
   marginTop: '16px',
   backgroundColor: '#26a197'
 });
+
+const StyledLogo = styled('img')({
+  height: '70px',  // Zmieniona wysokość
+  margin: '10px 0',
+});
+
 const Rejestracja = () => {
   const [etapRejestracji, setEtapRejestracji] = useState(1);
   const [nowyPacjent, setNowyPacjent] = useState({
@@ -87,6 +95,7 @@ const Rejestracja = () => {
         <div>
           <StyledAppBar position="static">
             <StyledToolbar>
+              <StyledLogo src={logo} alt="PolwroMED Logo" />
               <Typography variant="h6">PolwroMED</Typography>
               <StyledButtonsContainer>
                 <Button color="inherit" component={Link} to="/">

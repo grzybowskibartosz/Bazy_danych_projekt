@@ -10,6 +10,7 @@ import Button from '@mui/material/Button';
 import { styled } from '@mui/system';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import logo from './logo.png';
 
 const StyledAppBar = styled(AppBar)({
   backgroundColor: '#26a197',
@@ -17,12 +18,18 @@ const StyledAppBar = styled(AppBar)({
 
 const StyledToolbar = styled(Toolbar)({
   display: 'flex',
-  justifyContent: 'space-between',
+  justifyContent: 'flex start',
 });
 
 const StyledButtonsContainer = styled('div')({
   display: 'flex',
-  gap: '8px',
+  gap: '10px',
+  marginLeft: 'auto',
+});
+
+const StyledLogo = styled('img')({
+  height: '70px',  // Zmieniona wysokość
+  margin: '10px 0',
 });
 
 const NasiLekarze = () => {
@@ -39,6 +46,7 @@ const NasiLekarze = () => {
     <Box>
       <StyledAppBar position="static">
         <StyledToolbar>
+          <StyledLogo src={logo} alt="PolwroMED Logo" />
           <Typography variant="h6">PolwroMED</Typography>
           <StyledButtonsContainer>
             <Button color="inherit" component={Link} to="/">
