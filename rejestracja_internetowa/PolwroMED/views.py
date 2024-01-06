@@ -1,11 +1,13 @@
 from .models import Pacjent, Lekarz, Wizyta, Gabinet
 from rest_framework import generics
-from .serializers import PacjentSerializer, LekarzSerializer, GabinetSerializer, WizytaSerializer, UserSerializer, \
-                         LekarzSerializer
+from .serializers import PacjentSerializer, LekarzSerializer, GabinetSerializer, WizytaSerializer, UserSerializer
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.response import Response
+from django.views.decorators.http import require_GET
+from django.http import JsonResponse
 from rest_framework.views import APIView
+from rest_framework.decorators import api_view
 
 
 class PacjentListCreateView(generics.ListCreateAPIView):
@@ -85,3 +87,17 @@ class NasiLekarzeView(APIView):
         lekarze = Lekarz.objects.all()
         serializer = LekarzSerializer(lekarze, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+@require_GET
+def zajete_terminy_na_dzien(request, lekarz_id, rok, miesiac, dzien):
+    terminy = Wizyta.objects.filter(
+        lekarz_id=lekarz_id,
+        data_i_godzina__year=rok,
+        data_i_godzina__month=miesiac,
+        data_i_godzina__day=dzien,
+        status='zaplanowana'
+    ).values('data_i_godzina')
+
+    zajete_terminy = [termin['data_i_godzina'].isoformat() for termin in terminy]
+
+    return JsonResponse({'zajete_terminy': zajete_terminy}, status=200)

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
@@ -14,7 +14,7 @@ const StyledAppBar = styled(AppBar)({
 
 const StyledToolbar = styled(Toolbar)({
   display: 'flex',
-  justifyContent: 'flex start',
+  justifyContent: 'flex-start',
 });
 
 const StyledButtonsContainer = styled('div')({
@@ -39,6 +39,30 @@ const StyledLogo = styled('img')({
 });
 
 const HomePage = () => {
+  const [dostepneWizyty, setDostepneWizyty] = useState([]);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    // Wywołaj funkcję do pobrania dostępnych wizyt
+    const fetchData = async () => {
+      try {
+        const response = await fetch('http://localhost:8000/api/dostepne-wizyty/');
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setDostepneWizyty(data);
+      } catch (error) {
+        console.error('Błąd pobierania danych:', error);
+        setError(error.message || 'Wystąpił błąd podczas pobierania danych.');
+      }
+    };
+
+    // Wywołaj funkcję przy montowaniu komponentu
+    fetchData();
+  }, []); // Pusta tablica oznacza, że useEffect zostanie wywołany tylko raz, po zamontowaniu komponentu
+
   return (
     <div>
       <StyledAppBar position="static">
@@ -75,6 +99,21 @@ const HomePage = () => {
           Prowadzący projekt: dr. inż. Radosław Idzikowski.
         </Typography>
         <p>Tutaj możesz dodać swój tekst lub inne elementy.</p>
+
+        {error ? (
+          <Typography variant="body1" color="error">
+            {error}
+          </Typography>
+        ) : (
+          <>
+            <Typography variant="h5">Dostępne wizyty:</Typography>
+            <ul>
+              {dostepneWizyty.map(wizyta => (
+                <li key={wizyta.id}>{wizyta.lekarz} - {wizyta.data_i_godzina}</li>
+              ))}
+            </ul>
+          </>
+        )}
       </StyledCenteredColumn>
     </div>
   );

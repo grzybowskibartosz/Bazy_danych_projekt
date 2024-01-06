@@ -43,6 +43,8 @@ class Lekarz(models.Model):
     imie = models.CharField(max_length=50)
     nazwisko = models.CharField(max_length=50)
     specjalizacja = models.CharField(max_length=50)
+    godziny_pracy_start = models.TimeField(default='08:00')
+    godziny_pracy_koniec = models.TimeField(default='16:00')
 
     gabinety = models.ManyToManyField('Gabinet', related_name='lekarze_gabinetow')
 
@@ -67,12 +69,13 @@ class Wizyta(models.Model):
     pacjent = models.ForeignKey(Pacjent, on_delete=models.CASCADE)
     opis = models.TextField()
     STATUS_CHOICES = [
-        ('Zaplanowana', 'Zaplanowana'),
+        ('zaplanowana', 'Zaplanowana'),
         ('odbyta', 'Odbyta'),
         ('anulowana', 'Anulowana'),
+        ('wolna', 'Wolna'),
         # Dodaj inne statusy według potrzeb
     ]
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='wolna')
     gabinet = models.ForeignKey(Gabinet, on_delete=models.CASCADE)
     diagnoza = models.TextField(blank=True)
     przepisane_leki = models.TextField(blank=True)

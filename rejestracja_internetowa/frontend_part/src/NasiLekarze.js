@@ -8,7 +8,9 @@ import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Button from '@mui/material/Button';
 import { styled } from '@mui/system';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';  // Zmiana importu
+import { useHistory } from 'react-router-dom';
+
 import axios from 'axios';
 import logo from './logo.png';
 
@@ -28,11 +30,12 @@ const StyledButtonsContainer = styled('div')({
 });
 
 const StyledLogo = styled('img')({
-  height: '70px',  // Zmieniona wysokość
+  height: '70px',
   margin: '10px 0',
 });
 
 const NasiLekarze = () => {
+  const navigate = useNavigate();  // Zmiana na useNavigate
   const [lekarze, setLekarze] = useState([]);
 
   useEffect(() => {
@@ -41,6 +44,11 @@ const NasiLekarze = () => {
       .then(response => setLekarze(response.data))
       .catch(error => console.error('Błąd pobierania danych o lekarzach:', error));
   }, []);
+
+  const handleDostepneTerminyClick = (lekarzId) => {
+    // Przenieś użytkownika do strony z dostępnymi terminami danego lekarza
+    navigate(`/dostepne-terminy/${lekarzId}`);
+  };
 
   return (
     <Box>
@@ -80,6 +88,9 @@ const NasiLekarze = () => {
                   <Typography variant="body2" color="textSecondary">
                     {lekarz.specjalizacja}
                   </Typography>
+                  <Button color="primary" component={Link} to={`/dostepne-terminy/${lekarz.id}`}>
+                    Dostępne terminy
+                  </Button>
                 </CardContent>
               </Card>
             </Grid>

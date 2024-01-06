@@ -1,10 +1,9 @@
-// App.js
-
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, Outlet } from 'react-router-dom';
 import HomePage from './HomePage';
 import Rejestracja from './Rejestracja';
 import NasiLekarze from './NasiLekarze';
+import DostepneTerminy from './DostepneTerminy';
 
 function App() {
   return (
@@ -13,6 +12,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/rejestracja" element={<Rejestracja />} />
         <Route path="/nasi-lekarze" element={<NasiLekarze />} />
+        <Route path="/dostepne-terminy/:lekarzId" element={<DostepneTerminy />} />
       </Routes>
     </Router>
   );
