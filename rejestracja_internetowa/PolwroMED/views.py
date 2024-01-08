@@ -90,8 +90,13 @@ class NasiLekarzeView(APIView):
 
 @require_GET
 def zajete_terminy_na_dzien(request, lekarz_id, rok, miesiac, dzien):
+    try:
+        lekarz = Lekarz.objects.get(pk=lekarz_id)
+    except Lekarz.DoesNotExist:
+        return JsonResponse({'error': 'Lekarz o podanym ID nie istnieje'}, status=404)
+
     terminy = Wizyta.objects.filter(
-        lekarz_id=lekarz_id,
+        lekarz=lekarz,
         data_i_godzina__year=rok,
         data_i_godzina__month=miesiac,
         data_i_godzina__day=dzien,
@@ -100,4 +105,11 @@ def zajete_terminy_na_dzien(request, lekarz_id, rok, miesiac, dzien):
 
     zajete_terminy = [termin['data_i_godzina'].isoformat() for termin in terminy]
 
-    return JsonResponse({'zajete_terminy': zajete_terminy}, status=200)
+    return JsonResponse({
+        'zajete_terminy': zajete_terminy,
+        'godziny_pracy': {
+            'start': lekarz.godziny_pracy_start.isoformat(),
+            'koniec': lekarz.godziny_pracy_koniec.isoformat(),
+        },
+    })
+

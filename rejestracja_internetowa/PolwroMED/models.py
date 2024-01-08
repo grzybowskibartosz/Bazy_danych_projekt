@@ -5,7 +5,6 @@ from datetime import date
 from django.contrib.auth.models import User
 from django.db import models
 
-
 def validate_birthdate(value):
     if value >= date.today():
         raise ValidationError("Data urodzenia nie może być z przyszłości.")
