@@ -56,6 +56,7 @@ const Rejestracja = () => {
     adres: '',
     email: '',
     haslo: '',
+    inne_informacje: '',
   });
 
   const handleInputChange = (e) => {

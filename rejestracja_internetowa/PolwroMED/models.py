@@ -5,7 +5,6 @@ from datetime import date
 from django.contrib.auth.models import User
 from django.db import models
 
-
 def validate_birthdate(value):
     if value >= date.today():
         raise ValidationError("Data urodzenia nie może być z przyszłości.")
@@ -22,7 +21,6 @@ class Pacjent(models.Model):
     id = models.AutoField(primary_key=True)
     imie = models.CharField(max_length=50)
     nazwisko = models.CharField(max_length=50)
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='pacjent', null=True, blank=True)
     pesel = models.CharField(
         max_length=11,
         unique=True,
@@ -32,8 +30,8 @@ class Pacjent(models.Model):
     )
     data_urodzenia = models.DateField(validators=[validate_birthdate, validate_age])
     adres = models.TextField(max_length=256)
-    inne_informacje = models.TextField(max_length=3000,blank=True, null=True)
-    user = models.OneToOneField(User, on_delete=models.CASCADE, null = True, default = None)
+    inne_informacje = models.TextField(max_length=3000, blank=True, null=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, default=None)
 
     def __str__(self):
         return f'{self.imie} {self.nazwisko} {self.pesel} {self.data_urodzenia} {self.adres} ({self.user.username})'

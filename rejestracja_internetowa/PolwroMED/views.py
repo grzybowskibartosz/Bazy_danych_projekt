@@ -55,6 +55,8 @@ class RejestracjaView(APIView):
                 'password': data['haslo'],
                 'first_name': data['imie'],
                 'last_name': data['nazwisko'],
+                'user_type': data.get('user_type', 'P'),  # Ustaw domyślnie jako pacjent
+
             }
 
             pacjent_data = {
@@ -81,7 +83,6 @@ class RejestracjaView(APIView):
         except Exception as e:
             print("Exception:", str(e))
             return Response({'error': 'Internal Server Error'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 class NasiLekarzeView(APIView):
     def get(self, request, *args, **kwargs):
         lekarze = Lekarz.objects.all()
