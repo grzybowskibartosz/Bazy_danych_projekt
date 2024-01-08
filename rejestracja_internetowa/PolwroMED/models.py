@@ -48,6 +48,8 @@ class Lekarz(models.Model):
 
     gabinety = models.ManyToManyField('Gabinet', related_name='lekarze_gabinetow')
 
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, default=None)
+
     def __str__(self):
         return f'{self.imie} {self.nazwisko} - {self.specjalizacja}'
 
@@ -154,5 +156,3 @@ class Wizyta(models.Model):
 
     def __str__(self):
         return f'Wizyta u {self.lekarz} przez {self.pacjent} dnia {self.data_i_godzina} w gabinecie {self.gabinet}'
-
-
