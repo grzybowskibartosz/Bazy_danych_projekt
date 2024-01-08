@@ -3,6 +3,9 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import HomePage from './HomePage';
 import Rejestracja from './Rejestracja';
 import Login from './Login';
+import PatientPanel from './PatientPanel';
+import DoctorPanel from './DoctorPanel';
+
 
 function App() {
   return (

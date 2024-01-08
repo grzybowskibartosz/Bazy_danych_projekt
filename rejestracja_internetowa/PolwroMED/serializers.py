@@ -22,6 +22,8 @@ class LekarzSerializer(serializers.ModelSerializer):
         model = Lekarz
         fields = '__all__'
 
+
+
 class GabinetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Gabinet

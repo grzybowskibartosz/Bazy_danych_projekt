@@ -48,6 +48,8 @@ class Lekarz(models.Model):
 
     gabinety = models.ManyToManyField('Gabinet', related_name='lekarze_gabinetow')
 
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, default=None)
+
     def __str__(self):
         return f'{self.imie} {self.nazwisko} - {self.specjalizacja}'
 

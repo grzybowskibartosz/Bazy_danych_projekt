@@ -33,6 +33,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Dodaj adres swojego frontendu
 ]
 
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -54,7 +55,14 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+
 ]
+
+CSRF_COOKIE_SECURE = False
+
+CSRF_USE_SESSIONS = True
+
 
 ROOT_URLCONF = 'rejestracja_internetowa.urls'
 

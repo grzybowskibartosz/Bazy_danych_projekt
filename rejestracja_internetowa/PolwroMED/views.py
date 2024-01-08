@@ -1,22 +1,17 @@
-from django.http import JsonResponse
-from .models import Pacjent, Lekarz, Wizyta, Gabinet
-from rest_framework import generics
-from .serializers import PacjentSerializer, LekarzSerializer, GabinetSerializer, WizytaSerializer, UserSerializer
-from django.contrib.auth import get_user_model
-from rest_framework import status
-from rest_framework.response import Response
-
-from .forms import CustomAuthenticationForm
 from django.contrib.auth import authenticate, login
+from django.contrib.auth import get_user_model
+from django.http import JsonResponse
+from django.utils import timezone
+from rest_framework import generics, status
 from rest_framework.authtoken.models import Token
-from rest_framework.authtoken.models import Token
-from django.dispatch import receiver
-from django.db.models.signals import post_save
-from django.contrib.auth.models import User
-
-
-
+from rest_framework.permissions import BasePermission
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from .models import Pacjent, Lekarz, Wizyta, Gabinet
+from .serializers import GabinetSerializer, WizytaSerializer, UserSerializer, PacjentSerializer, LekarzSerializer
+
 
 class PacjentListCreateView(generics.ListCreateAPIView):
     queryset = Pacjent.objects.all()
@@ -63,6 +58,8 @@ class RejestracjaView(APIView):
                 'password': data['haslo'],
                 'first_name': data['imie'],
                 'last_name': data['nazwisko'],
+                'user_type': data.get('user_type', 'P'),  # Ustaw domyślnie jako pacjent
+
             }
 
             pacjent_data = {
@@ -104,3 +101,41 @@ class LoginView(APIView):
             return JsonResponse({'token': token.key})
         else:
             return JsonResponse({'error': 'Invalid credentials'}, status=401)
+
+class IsPatientOrDoctor(BasePermission):
+    def has_permission(self, request, view):
+        user = request.user
+        return hasattr(user, 'pacjent') or hasattr(user, 'lekarz')
+
+
+class UserInfoView(APIView):
+    permission_classes = [IsAuthenticated, IsPatientOrDoctor]
+
+    def get_user_info(self, request):
+        user = request.user
+        if hasattr(user, 'pacjent'):
+            role = 'patient'
+            user_data = PacjentSerializer(user.pacjent).data
+
+            # Dodaj informacje o wizytach pacjenta
+            wizyty_odbyte = Wizyta.objects.filter(pacjent=user.pacjent, data__lt=timezone.now())
+            wizyty_zaplanowane = Wizyta.objects.filter(pacjent=user.pacjent, data__gte=timezone.now())
+            user_data['wizyty_odbyte'] = WizytaSerializer(wizyty_odbyte, many=True).data
+            user_data['wizyty_zaplanowane'] = WizytaSerializer(wizyty_zaplanowane, many=True).data
+
+        elif hasattr(user, 'lekarz'):
+            role = 'doctor'
+            user_data = LekarzSerializer(user.lekarz).data
+            # Tutaj możesz dodać dodatkowe informacje dla lekarza
+
+        else:
+            role = 'unknown'
+            user_data = {}
+
+        return Response({'role': role, 'user_data': user_data})
+
+    def get(self, request):
+        response = self.get_user_info(request)
+        return response
+
+
