@@ -8,15 +8,15 @@ class PacjentSerializer(serializers.ModelSerializer):
         model = Pacjent
         fields = '__all__'
 
-        def create(self, validated_data):
-            user_data = validated_data.pop('user')
-            user_serializer = UserSerializer(data=user_data)
-            if user_serializer.is_valid():
-                user = user_serializer.save()
-                pacjent = Pacjent.objects.create(user=user, **validated_data)
-                return pacjent
-            else:
-                raise serializers.ValidationError({'user': user_serializer.errors})
+    def create(self, validated_data):
+        user_data = validated_data.pop('user')
+        user_serializer = UserSerializer(data=user_data)
+        if user_serializer.is_valid():
+            user = user_serializer.save()
+            pacjent = Pacjent.objects.create(user=user, **validated_data)
+            return pacjent
+        else:
+            raise serializers.ValidationError({'user': user_serializer.errors})
 class LekarzSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lekarz
