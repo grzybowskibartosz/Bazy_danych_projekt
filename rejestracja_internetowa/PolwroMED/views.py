@@ -30,7 +30,10 @@ from rest_framework.views import APIView
 from .models import Pacjent, Lekarz, Wizyta, Gabinet
 from .serializers import GabinetSerializer, WizytaSerializer, UserSerializer, PacjentSerializer, LekarzSerializer
 
-
+from django.views.decorators.http import require_GET
+from django.http import JsonResponse
+from rest_framework.views import APIView
+from rest_framework.decorators import api_view
 
 
 from rest_framework.views import APIView
@@ -173,4 +176,33 @@ def get_scheduled_visits(request):
              'gabinet': visit.gabinet.numer_gabinetu, 'opis': visit.opis} for visit in scheduled_visits]
     return Response(data)
 
+class NasiLekarzeView(APIView):
+    def get(self, request, *args, **kwargs):
+        lekarze = Lekarz.objects.all()
+        serializer = LekarzSerializer(lekarze, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
+@require_GET
+def zajete_terminy_na_dzien(request, lekarz_id, rok, miesiac, dzien):
+    try:
+        lekarz = Lekarz.objects.get(pk=lekarz_id)
+    except Lekarz.DoesNotExist:
+        return JsonResponse({'error': 'Lekarz o podanym ID nie istnieje'}, status=404)
+
+    terminy = Wizyta.objects.filter(
+        lekarz=lekarz,
+        data_i_godzina__year=rok,
+        data_i_godzina__month=miesiac,
+        data_i_godzina__day=dzien,
+        status='zaplanowana'
+    ).values('data_i_godzina')
+
+    zajete_terminy = [termin['data_i_godzina'].isoformat() for termin in terminy]
+
+    return JsonResponse({
+        'zajete_terminy': zajete_terminy,
+        'godziny_pracy': {
+            'start': lekarz.godziny_pracy_start.isoformat(),
+            'koniec': lekarz.godziny_pracy_koniec.isoformat(),
+        },
+    })

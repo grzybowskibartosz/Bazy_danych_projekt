@@ -5,6 +5,7 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import { styled } from '@mui/system';
+import logo from './logo.png';
 
 // ustalamy kolor tła
 const StyledAppBar = styled(AppBar)({
@@ -13,12 +14,13 @@ const StyledAppBar = styled(AppBar)({
 
 const StyledToolbar = styled(Toolbar)({
   display: 'flex',
-  justifyContent: 'space-between',
+  justifyContent: 'flex-start',
 });
 
 const StyledButtonsContainer = styled('div')({
   display: 'flex',
-  gap: '8px',
+  gap: '10px',
+  marginLeft: 'auto',
 });
 
 const StyledCenteredColumn = styled('div')({
@@ -31,12 +33,20 @@ const StyledCenteredColumn = styled('div')({
   height: '100vh',
 });
 
+const StyledLogo = styled('img')({
+  height: '70px',  // Zmieniona wysokość
+  margin: '10px 0',
+});
+
 const HomePage = () => {
   return (
     <div>
       <StyledAppBar position="static">
         <StyledToolbar>
-          <Typography variant="h6">PolwroMED</Typography>
+          <StyledLogo src={logo} alt="PolwroMED Logo" />
+          <Typography variant="h6">
+            PolwroMED
+          </Typography>
           <StyledButtonsContainer>
             {/* Użyj Link do nawigacji do nowej strony */}
             <Button color="inherit" component={Link} to="/login">
@@ -44,6 +54,9 @@ const HomePage = () => {
             </Button>
             <Button color="inherit" component={Link} to="/rejestracja">
               Rejestracja
+            </Button>
+            <Button color="inherit" component={Link} to="/nasi-lekarze">
+              Nasi lekarze
             </Button>
           </StyledButtonsContainer>
         </StyledToolbar>

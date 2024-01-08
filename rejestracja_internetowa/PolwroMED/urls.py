@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import PacjentListCreateView, PacjentDetailView, LekarzListCreateView, LekarzDetailView, WizytaListCreateView, \
-                   WizytaDetailView, GabinetListCreateView, GabinetDetailView, RejestracjaView, LoginView, UserInfoView, get_scheduled_visits
+                   WizytaDetailView, GabinetListCreateView, GabinetDetailView, RejestracjaView, LoginView, UserInfoView, get_scheduled_visits, NasiLekarzeView, zajete_terminy_na_dzien
 
 urlpatterns = [
 
@@ -27,6 +27,13 @@ urlpatterns = [
     path('api/get_user_info/', UserInfoView.as_view(), name='get_user_info'),
 
     path('api/get_scheduled_visits/', get_scheduled_visits, name='get_scheduled_visits'),
+
+path('api/nasi-lekarze/', NasiLekarzeView.as_view(), name='nasi-lekarze'),
+
+    path('api/zajete-terminy-nowy/<int:lekarz_id>/<int:rok>/<int:miesiac>/<int:dzien>/',
+         zajete_terminy_na_dzien, name='zajete-terminy-nowy'),
+
+    #path('api/umow-wizyte/<int:wizyta_id>/', UmowWizyteView.as_view(), name='umow-wizyte'),
 
 
 ]
