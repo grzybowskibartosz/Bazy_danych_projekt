@@ -1,30 +1,17 @@
-from django.contrib.auth import authenticate, login
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.middleware.csrf import get_token
 from django.http import JsonResponse
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_http_methods
 from rest_framework import generics, status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
-from rest_framework.decorators import authentication_classes
-from rest_framework.decorators import permission_classes
-from rest_framework.permissions import BasePermission
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import authentication_classes, permission_classes, api_view
+from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-
-from .models import Pacjent, Lekarz, Gabinet
-from .models import Wizyta
-from .serializers import GabinetSerializer, UserSerializer, PacjentSerializer, LekarzSerializer
-from .serializers import WizytaSerializer
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from django.shortcuts import get_object_or_404
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from django.shortcuts import get_object_or_404
-
+from .models import Pacjent, Lekarz, Gabinet, Wizyta
+from .serializers import GabinetSerializer, UserSerializer, PacjentSerializer, LekarzSerializer, WizytaSerializer
 
 class PacjentListCreateView(generics.ListCreateAPIView):
     queryset = Pacjent.objects.all()
@@ -108,9 +95,34 @@ class LoginView(APIView):
         if user:
             login(request, user)
             token, created = Token.objects.get_or_create(user=user)
-            return JsonResponse({'token': token.key})
+            user_data = {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                # Dodaj inne informacje o użytkowniku, które chcesz przekazać
+            }
+
+            # Pobierz token CSRF
+            csrf_token = get_token(request)
+
+            # Ustaw nagłówek CSRF Token w odpowiedzi
+            response = Response({'token': token.key, 'user': user_data})
+            response['X-CSRFToken'] = csrf_token
+
+            return response
         else:
-            return JsonResponse({'error': 'Invalid credentials'}, status=401)
+            return Response({'error': 'Invalid credentials'}, status=401)
+class logout_view(APIView):
+    def post(self, request):
+        logout(request)
+        response = JsonResponse({'detail': 'Successfully logged out'})
+        response["Access-Control-Allow-Origin"] = "http://localhost:3000"
+        response["Access-Control-Allow-Credentials"] = "true"
+        response.set_cookie('csrftoken', get_token(request))  # Dodaj tę linię
+        return response
+def csrf_token_view(request):
+    csrf_token = get_token(request)
+    return JsonResponse({'csrfToken': csrf_token})
 
 class IsPatientOrDoctor(BasePermission):
     def has_permission(self, request, view):
@@ -143,12 +155,6 @@ class UserInfoView(APIView):
     def get(self, request):
         response = self.get_user_info(request)
         return response
-
-
-from rest_framework import generics
-from rest_framework.permissions import IsAuthenticated
-from .models import Wizyta
-from .serializers import WizytaSerializer
 
 class WizytyPacjentaListView(generics.ListAPIView):
     serializer_class = WizytaSerializer

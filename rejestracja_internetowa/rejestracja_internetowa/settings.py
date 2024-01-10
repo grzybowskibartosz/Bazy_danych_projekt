@@ -25,13 +25,27 @@ SECRET_KEY = 'django-insecure-f+t#)u9@#$prvb3uvulk+iq4^y%w___3@*c6ho@hifo%=w(cyg
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]']
 
 # Application definition
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # Dodaj adres swojego frontendu
+CORS_ALLOW_CREDENTIALS = True
+CORS_ORIGIN_ALLOW_ALL = False
+CORS_ALLOWED_ORIGINS = ["http://localhost:3000"]  # Dodaj adres swojego frontendu
+
+CSRF_USE_SESSIONS = True
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = None
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",  # Dodaj tutaj swoje pochodzenie frontendu
 ]
+
+CSRF_COOKIE_NAME = 'csrftoken'  # Sprawdź, czy nazwa jest zgodna z ustawieniem w pliku cookie
+CSRF_HEADER_NAME = 'HTTP_X_CSRFTOKEN'
+
+SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_SAMESITE = None
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -83,8 +97,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'users_info',
-        'USER': 'root',
-        'PASSWORD': 'root',
+        'USER': 'admin',
+        'PASSWORD': 'admin',
         'HOST': 'localhost',
         'PORT': '3306',
     }
@@ -128,3 +142,6 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CSRF_COOKIE_SECURE = False  # Ustaw na True, jeśli korzystasz z HTTPS
+CSRF_COOKIE_SAMESITE = 'Lax'  # Lub 'Strict' w zależności od wymagań
