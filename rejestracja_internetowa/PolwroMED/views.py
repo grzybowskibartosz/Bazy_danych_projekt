@@ -161,8 +161,10 @@ def moje_wizyty(request):
     return JsonResponse({"wizyty": wizyty_data})
 
 def wizyty_lekarza(request, lekarz_id):
-    wizyty = Wizyta.objects.filter(lekarz__id=lekarz_id)
-    wizyty_data = [
+    wizyty_zaplanowane = Wizyta.objects.filter(lekarz__id=lekarz_id, status='Zaplanowana')
+    wizyty_odbyte = Wizyta.objects.filter(lekarz__id=lekarz_id, status='Odbyta')
+
+    wizyty_zaplanowane_data = [
         {
             'id': wizyta.id,
             'data_i_godzina': wizyta.data_i_godzina,
@@ -172,13 +174,34 @@ def wizyty_lekarza(request, lekarz_id):
             },
             # Dodaj więcej informacji o wizycie, jeśli to konieczne
         }
-        for wizyta in wizyty
+        for wizyta in wizyty_zaplanowane
     ]
-    return JsonResponse(wizyty_data, safe=False)
+
+    wizyty_odbyte_data = [
+        {
+            'id': wizyta.id,
+            'data_i_godzina': wizyta.data_i_godzina,
+            'pacjent': {
+                'imie': wizyta.pacjent.imie,
+                'nazwisko': wizyta.pacjent.nazwisko,
+            },
+            # Dodaj więcej informacji o wizycie, jeśli to konieczne
+        }
+        for wizyta in wizyty_odbyte
+    ]
+
+    response_data = {
+        'zaplanowane': wizyty_zaplanowane_data,
+        'odbyte': wizyty_odbyte_data,
+    }
+
+    return JsonResponse(response_data, safe=False)
 
 def wizyty_pacjenta(request, pacjent_id):
-    wizyty = Wizyta.objects.filter(pacjent__id=pacjent_id)
-    wizyty_data = [
+    wizyty_zaplanowane = Wizyta.objects.filter(pacjent__id=pacjent_id, status='Zaplanowana')
+    wizyty_odbyte = Wizyta.objects.filter(pacjent__id=pacjent_id, status='Odbyta')
+
+    wizyty_zaplanowane_data = [
         {
             'id': wizyta.id,
             'data_i_godzina': wizyta.data_i_godzina,
@@ -186,12 +209,39 @@ def wizyty_pacjenta(request, pacjent_id):
                 'imie': wizyta.lekarz.imie,
                 'nazwisko': wizyta.lekarz.nazwisko,
                 'specjalizacja': wizyta.lekarz.specjalizacja,
+
             },
+            'gabinet': wizyta.gabinet.numer_gabinetu,
             # Dodaj więcej informacji o wizycie, jeśli to konieczne
         }
-        for wizyta in wizyty
+        for wizyta in wizyty_zaplanowane
     ]
-    return JsonResponse(wizyty_data, safe=False)
+
+    wizyty_odbyte_data = [
+        {
+            'id': wizyta.id,
+            'data_i_godzina': wizyta.data_i_godzina,
+            'lekarz': {
+                'imie': wizyta.lekarz.imie,
+                'nazwisko': wizyta.lekarz.nazwisko,
+                'specjalizacja': wizyta.lekarz.specjalizacja,
+
+            },
+            'gabinet': wizyta.gabinet.numer_gabinetu,
+            'diagnoza': wizyta.diagnoza,
+            'przepisane_leki': wizyta.przepisane_leki,
+            'notatki_lekarza': wizyta.notatki_lekarza,
+            # Dodaj więcej informacji o wizycie, jeśli to konieczne
+        }
+        for wizyta in wizyty_odbyte
+    ]
+
+    response_data = {
+        'zaplanowane': wizyty_zaplanowane_data,
+        'odbyte': wizyty_odbyte_data,
+    }
+
+    return JsonResponse(response_data, safe=False)
 
 
 class NasiLekarzeView(APIView):

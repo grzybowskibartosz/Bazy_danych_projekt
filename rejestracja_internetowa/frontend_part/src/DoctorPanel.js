@@ -18,14 +18,15 @@ import { styled } from '@mui/system';
 import { Link } from 'react-router-dom';
 
 const DoctorPanel = ({ userData }) => {
-  const [wizyty, setWizyty] = useState([]);
+  const [wizyty, setWizyty] = useState({ zaplanowane: [], odbyte: [] });
 
   useEffect(() => {
     // Pobierz dane o wizytach lekarza z backendu
     const fetchWizyty = async () => {
       try {
         const response = await axios.get(`http://localhost:8000/api/wizyty/${userData.id}/lekarz/`);
-        setWizyty(response.data);
+        const { zaplanowane, odbyte } = response.data;
+        setWizyty({zaplanowane, odbyte});
       } catch (error) {
         console.error('Błąd pobierania danych o wizytach lekarza', error);
       }
@@ -35,23 +36,34 @@ const DoctorPanel = ({ userData }) => {
   }, [userData.id]);
 
   return (
-    <div>
+<div>
       <Typography variant="h5">Panel Lekarza</Typography>
       <p>Imię: {userData.imie}</p>
       <p>Nazwisko: {userData.nazwisko}</p>
       <p>Specjalizacja: {userData.specjalizacja}</p>
-      {/* Dodaj więcej pól w zależności od danych lekarza */}
 
-      {/* Wyświetl dane o wizytach lekarza */}
       <div>
         <Typography variant="h6">Wizyty lekarza:</Typography>
-        <ul>
-          {wizyty.map((wizyta) => (
-            <li key={wizyta.id}>
-              Data i godzina: {new Date(wizyta.data_i_godzina).toLocaleString()} | Pacjent: {wizyta.pacjent.imie} {wizyta.pacjent.nazwisko}
-            </li>
-          ))}
-        </ul>
+        <div>
+          <Typography variant="subtitle1">Zaplanowane:</Typography>
+          <ul>
+            {wizyty.zaplanowane.map((wizyta) => (
+              <li key={wizyta.id}>
+                Data i godzina: {new Date(wizyta.data_i_godzina).toLocaleString()} | Pacjent: {wizyta.pacjent.imie} {wizyta.pacjent.nazwisko}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <Typography variant="subtitle1">Odbyte:</Typography>
+          <ul>
+            {wizyty.odbyte.map((wizyta) => (
+              <li key={wizyta.id}>
+                Data i godzina: {new Date(wizyta.data_i_godzina).toLocaleString()} | Pacjent: {wizyta.pacjent.imie} {wizyta.pacjent.nazwisko}
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </div>
   );
