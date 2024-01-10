@@ -1,8 +1,11 @@
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
-from rest_framework import generics, status
+from rest_framework import generics
+from rest_framework import status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import authentication_classes
@@ -11,19 +14,11 @@ from rest_framework.permissions import BasePermission
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
 
-from .models import Pacjent, Lekarz, Gabinet
-from .models import Wizyta
+from .models import Lekarz, Gabinet
+from .models import Pacjent, Wizyta
 from .serializers import GabinetSerializer, UserSerializer, PacjentSerializer, LekarzSerializer
 from .serializers import WizytaSerializer
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from django.shortcuts import get_object_or_404
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from django.shortcuts import get_object_or_404
 
 
 class PacjentListCreateView(generics.ListCreateAPIView):
@@ -145,24 +140,58 @@ class UserInfoView(APIView):
         return response
 
 
-from rest_framework import generics
-from rest_framework.permissions import IsAuthenticated
-from .models import Wizyta
-from .serializers import WizytaSerializer
+@csrf_exempt
+@login_required
+@require_GET
+def moje_wizyty(request):
+    print("Endpoint moje_wizyty called!")
+    user = request.user
+    pacjent = Pacjent.objects.get(user=user)
+    moje_wizyty = Wizyta.objects.filter(pacjent=pacjent)
 
-class WizytyPacjentaListView(generics.ListAPIView):
-    serializer_class = WizytaSerializer
-    permission_classes = [IsAuthenticated]
+    wizyty_data = [
+        {
+            'id': wizyta.id,
+            'opis': wizyta.opis,
+            'data_i_godzina': wizyta.data_i_godzina.isoformat(),
+        }
+        for wizyta in moje_wizyty
+    ]
 
-    def get_queryset(self):
-        # Pobierz id pacjenta z parametru URL
-        pacjent_id = self.kwargs['pacjent_id']
+    return JsonResponse({"wizyty": wizyty_data})
 
-        # Pobierz wszystkie wizyty przypisane do danego pacjenta
-        queryset = Wizyta.objects.filter(pacjent__id=pacjent_id)
+def wizyty_lekarza(request, lekarz_id):
+    wizyty = Wizyta.objects.filter(lekarz__id=lekarz_id)
+    wizyty_data = [
+        {
+            'id': wizyta.id,
+            'data_i_godzina': wizyta.data_i_godzina,
+            'pacjent': {
+                'imie': wizyta.pacjent.imie,
+                'nazwisko': wizyta.pacjent.nazwisko,
+            },
+            # Dodaj więcej informacji o wizycie, jeśli to konieczne
+        }
+        for wizyta in wizyty
+    ]
+    return JsonResponse(wizyty_data, safe=False)
 
-        return queryset
-
+def wizyty_pacjenta(request, pacjent_id):
+    wizyty = Wizyta.objects.filter(pacjent__id=pacjent_id)
+    wizyty_data = [
+        {
+            'id': wizyta.id,
+            'data_i_godzina': wizyta.data_i_godzina,
+            'lekarz': {
+                'imie': wizyta.lekarz.imie,
+                'nazwisko': wizyta.lekarz.nazwisko,
+                'specjalizacja': wizyta.lekarz.specjalizacja,
+            },
+            # Dodaj więcej informacji o wizycie, jeśli to konieczne
+        }
+        for wizyta in wizyty
+    ]
+    return JsonResponse(wizyty_data, safe=False)
 
 
 class NasiLekarzeView(APIView):
