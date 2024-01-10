@@ -1,42 +1,30 @@
-from django.http import JsonResponse
-from .models import Pacjent, Lekarz, Wizyta, Gabinet
-from rest_framework import generics
-from .serializers import PacjentSerializer, LekarzSerializer, GabinetSerializer, WizytaSerializer, UserSerializer
-from django.contrib.auth import get_user_model
-from rest_framework import status
-from rest_framework.response import Response
-
-from .forms import CustomAuthenticationForm
-from django.contrib.auth import authenticate, login
-from rest_framework.authtoken.models import Token
-from rest_framework.authtoken.models import Token
-from django.dispatch import receiver
-from django.db.models.signals import post_save
-from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import get_user_model
 from django.http import JsonResponse
-from django.utils import timezone
+from django.views.decorators.http import require_GET
 from rest_framework import generics, status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
-from rest_framework.decorators import api_view, permission_classes
 from rest_framework.decorators import authentication_classes
+from rest_framework.decorators import permission_classes
 from rest_framework.permissions import BasePermission
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 
-from .models import Pacjent, Lekarz, Wizyta, Gabinet
-from .serializers import GabinetSerializer, WizytaSerializer, UserSerializer, PacjentSerializer, LekarzSerializer
+from .models import Pacjent, Lekarz, Gabinet
+from .models import Wizyta
+from .serializers import GabinetSerializer, UserSerializer, PacjentSerializer, LekarzSerializer
+from .serializers import WizytaSerializer
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import get_object_or_404
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import get_object_or_404
 
-from django.views.decorators.http import require_GET
-from django.http import JsonResponse
-from rest_framework.views import APIView
-from rest_framework.decorators import api_view
-
-
-from rest_framework.views import APIView
 
 class PacjentListCreateView(generics.ListCreateAPIView):
     queryset = Pacjent.objects.all()
@@ -111,7 +99,6 @@ class RejestracjaView(APIView):
             return Response({'error': 'Internal Server Error'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-
 class LoginView(APIView):
     def post(self, request):
         username = request.data.get('username')
@@ -137,16 +124,10 @@ class UserInfoView(APIView):
 
     def get_user_info(self, request):
         user = request.user
-        print(f"User: {user}")
+
         if hasattr(user, 'pacjent'):
             role = 'patient'
             user_data = PacjentSerializer(user.pacjent).data
-
-            # Dodaj informacje o wizytach pacjenta
-            wizyty_odbyte = Wizyta.objects.filter(pacjent=user.pacjent, data_i_godzina__lt=timezone.now())
-            wizyty_zaplanowane = Wizyta.objects.filter(pacjent=user.pacjent, data_i_godzina__gte=timezone.now())
-            user_data['wizyty_odbyte'] = WizytaSerializer(wizyty_odbyte, many=True).data
-            user_data['wizyty_zaplanowane'] = WizytaSerializer(wizyty_zaplanowane, many=True).data
 
         elif hasattr(user, 'lekarz'):
             role = 'doctor'
@@ -164,17 +145,25 @@ class UserInfoView(APIView):
         return response
 
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_scheduled_visits(request):
-    # Tutaj dodaj kod do pobierania informacji o zaplanowanych wizytach pacjenta
-    # Możesz skorzystać z modelu Wizyta i zapytania do bazy danych
-    scheduled_visits = Wizyta.objects.filter(pacjent=request.user.pacjent, status='Zaplanowana')
+from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
+from .models import Wizyta
+from .serializers import WizytaSerializer
 
-    # Następnie przekształć dane na format JSON i zwróć je w odpowiedzi
-    data = [{'lekarz': visit.lekarz.imie_nazwisko(), 'data_i_godzina': visit.data_i_godzina,
-             'gabinet': visit.gabinet.numer_gabinetu, 'opis': visit.opis} for visit in scheduled_visits]
-    return Response(data)
+class WizytyPacjentaListView(generics.ListAPIView):
+    serializer_class = WizytaSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Pobierz id pacjenta z parametru URL
+        pacjent_id = self.kwargs['pacjent_id']
+
+        # Pobierz wszystkie wizyty przypisane do danego pacjenta
+        queryset = Wizyta.objects.filter(pacjent__id=pacjent_id)
+
+        return queryset
+
+
 
 class NasiLekarzeView(APIView):
     def get(self, request, *args, **kwargs):
