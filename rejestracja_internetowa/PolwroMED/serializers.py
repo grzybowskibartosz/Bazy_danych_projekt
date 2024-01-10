@@ -10,7 +10,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['username', 'email', 'password']
 
 class PacjentSerializer(serializers.ModelSerializer):
-    user = UserSerializer(write_only=True)  # Dodaj to pole
+    user = UserSerializer(write_only=True)
     email = serializers.EmailField()
     haslo = serializers.CharField(write_only=True)
     class Meta:

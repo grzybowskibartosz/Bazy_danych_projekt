@@ -80,6 +80,7 @@ class RejestracjaView(APIView):
 
         except Exception as e:
             print("Exception:", str(e))
+            print("Request data:", request.data)
             return Response({'error': 'Internal Server Error'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class NasiLekarzeView(APIView):

@@ -21,7 +21,6 @@ class Pacjent(models.Model):
     id = models.AutoField(primary_key=True)
     imie = models.CharField(max_length=50)
     nazwisko = models.CharField(max_length=50)
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='pacjent', null=True, blank=True)
     pesel = models.CharField(
         max_length=11,
         unique=True,

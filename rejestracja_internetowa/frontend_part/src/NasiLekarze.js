@@ -60,7 +60,7 @@ const NasiLekarze = () => {
             <Button color="inherit" component={Link} to="/">
               Strona Główna
             </Button>
-            <Button color="inherit" component={Link} to="/logowanie">
+            <Button color="inherit" component={Link} to="/login">
               Logowanie
             </Button>
             <Button color="inherit" component={Link} to="/rejestracja">
