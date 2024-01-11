@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_POST
 from rest_framework import generics
 from rest_framework import status
 from rest_framework.authentication import TokenAuthentication
@@ -19,6 +19,7 @@ from .models import Lekarz, Gabinet
 from .models import Pacjent, Wizyta
 from .serializers import GabinetSerializer, UserSerializer, PacjentSerializer, LekarzSerializer
 from .serializers import WizytaSerializer
+
 
 
 class PacjentListCreateView(generics.ListCreateAPIView):
@@ -172,6 +173,8 @@ def wizyty_lekarza(request, lekarz_id):
                 'imie': wizyta.pacjent.imie,
                 'nazwisko': wizyta.pacjent.nazwisko,
             },
+            'gabinet': wizyta.gabinet.numer_gabinetu,
+            'status': wizyta.status,
             # Dodaj więcej informacji o wizycie, jeśli to konieczne
         }
         for wizyta in wizyty_zaplanowane
@@ -185,6 +188,11 @@ def wizyty_lekarza(request, lekarz_id):
                 'imie': wizyta.pacjent.imie,
                 'nazwisko': wizyta.pacjent.nazwisko,
             },
+            'gabinet': wizyta.gabinet.numer_gabinetu,
+            'diagnoza': wizyta.diagnoza,
+            'przepisane_leki': wizyta.przepisane_leki,
+            'notatki_lekarza': wizyta.notatki_lekarza,
+            'status': wizyta.status,
             # Dodaj więcej informacji o wizycie, jeśli to konieczne
         }
         for wizyta in wizyty_odbyte
@@ -242,6 +250,27 @@ def wizyty_pacjenta(request, pacjent_id):
     }
 
     return JsonResponse(response_data, safe=False)
+
+@csrf_exempt
+@require_POST
+@login_required
+def zmien_status_wizyty(request, wizyta_id):
+    try:
+        wizyta = Wizyta.objects.get(pk=wizyta_id)
+    except Wizyta.DoesNotExist:
+        return JsonResponse({'error': 'Wizyta o podanym ID nie istnieje'}, status=404)
+
+    if wizyta.lekarz.user != request.user:
+        return JsonResponse({'error': 'Nie masz uprawnień do zmiany statusu tej wizyty'}, status=403)
+
+    nowy_status = request.POST.get('status')
+    if nowy_status not in ['Zaplanowana', 'Odbyta']:
+        return JsonResponse({'error': 'Nieprawidłowy status wizyty'}, status=400)
+
+    wizyta.status = nowy_status
+    wizyta.save()
+
+    return JsonResponse({'success': True})
 
 
 class NasiLekarzeView(APIView):
