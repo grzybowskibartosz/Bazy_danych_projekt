@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import AppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
+import Cookies from 'js-cookie';
+import {AppBar, Toolbar, Typography, Button, Grid } from '@material-ui/core';
 import { styled } from '@mui/system';
 import { Link } from 'react-router-dom';
 import logo from './logo.png';
+
 
 const StyledAppBar = styled(AppBar)({
   backgroundColor: '#26a197',
@@ -33,20 +32,26 @@ const NavigationBar = () => {
 
   const handleLogout = async () => {
     try {
-      // Usuń token CSRF przed wylogowaniem
-      localStorage.removeItem('csrfToken');
-
       // Dodaj obsługę wylogowania
       setLoggedIn(false);
-      setUserName('');
 
-      // Wyślij żądanie wylogowania
+      // Pobierz token CSRF z localStorage
+      const csrfToken = localStorage.getItem('csrfToken');
+      console.log('CSRF Token przed wylogowaniem:', csrfToken);
+
+      // Wyślij żądanie wylogowania z użyciem tokena CSRF
       await axios.post('http://localhost:8000/api/logout/', null, {
-        withCredentials: true,
+        headers: {
+          'X-CSRFToken': csrfToken,
+        },
       });
       console.log('Wylogowano pomyślnie.');
+
+      // Usuń tokeny z localStorage
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('csrfToken');
     } catch (error) {
-      console.error('Błąd wylogowywania:', error.message);
+      console.error('Błąd wylogowywania:', error);
     }
   };
 
@@ -79,45 +84,50 @@ const NavigationBar = () => {
     checkLoginStatus();
   }, []); // Pusta tablica oznacza, że useEffect będzie wywołane tylko raz, po zamontowaniu komponentu
 
-  return (
+return (
     <StyledAppBar position="static">
       <StyledToolbar>
-        <div>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
           <StyledLogo src={logo} alt="PolwroMED Logo" />
-          <Typography variant="h6">
+          <Typography variant="h6" style={{ marginLeft: 10 }}>
             PolwroMED
           </Typography>
         </div>
-        <StyledButtonsContainer>
-          {loggedIn ? (
-            <>
-              <Typography variant="subtitle1" color="inherit">
-                Witaj, {userName}
-              </Typography>
-              <Button color="inherit" onClick={handleLogout}>
-                Wyloguj
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button color="inherit" component={Link} to="/">
-                Strona główna
-              </Button>
-              <Button color="inherit" component={Link} to="/login">
-                Logowanie
-              </Button>
-              <Button color="inherit" component={Link} to="/rejestracja">
-                Rejestracja
-              </Button>
-              <Button color="inherit" component={Link} to="/nasi-lekarze">
-                Nasi lekarze
-              </Button>
-            </>
-          )}
-        </StyledButtonsContainer>
+        {loggedIn ? (
+          <Typography variant="subtitle1" color="inherit">
+            Witaj, {userName}!
+          </Typography>
+        ) : (
+          <StyledButtonsContainer>
+            <Button color="inherit" component={Link} to="/">
+              Strona główna
+            </Button>
+            <Button color="inherit" component={Link} to="/login">
+              Logowanie
+            </Button>
+            <Button color="inherit" component={Link} to="/rejestracja">
+              Rejestracja
+            </Button>
+            <Button color="inherit" component={Link} to="/nasi-lekarze">
+              Nasi lekarze
+            </Button>
+          </StyledButtonsContainer>
+        )}
+        {loggedIn && (
+          <StyledButtonsContainer>
+            <Button color="inherit" onClick={handleLogout}>
+              Wyloguj
+            </Button>
+            <Button color="inherit" component={Link} to="/">
+              Strona główna
+            </Button>
+            <Button color="inherit" component={Link} to="/nasi-lekarze">
+              Nasi lekarze
+            </Button>
+          </StyledButtonsContainer>
+        )}
       </StyledToolbar>
     </StyledAppBar>
   );
 };
-
 export default NavigationBar;

@@ -6,6 +6,7 @@ import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import { styled } from '@mui/system';
 import logo from './logo.png';
+import NavigationBar from './NavigationBar';
 
 // ustalamy kolor tła
 const StyledAppBar = styled(AppBar)({
@@ -41,27 +42,7 @@ const StyledLogo = styled('img')({
 const HomePage = () => {
   return (
     <div>
-      <StyledAppBar position="static">
-        <StyledToolbar>
-          <StyledLogo src={logo} alt="PolwroMED Logo" />
-          <Typography variant="h6">
-            PolwroMED
-          </Typography>
-          <StyledButtonsContainer>
-            {/* Użyj Link do nawigacji do nowej strony */}
-            <Button color="inherit" component={Link} to="/login">
-              Logowanie
-            </Button>
-            <Button color="inherit" component={Link} to="/rejestracja">
-              Rejestracja
-            </Button>
-            <Button color="inherit" component={Link} to="/nasi-lekarze">
-              Nasi lekarze
-            </Button>
-          </StyledButtonsContainer>
-        </StyledToolbar>
-      </StyledAppBar>
-
+      <NavigationBar />
       <StyledCenteredColumn>
         <Typography variant="h5">
           Witaj na stronie głównej aplikacji PolwroMED!

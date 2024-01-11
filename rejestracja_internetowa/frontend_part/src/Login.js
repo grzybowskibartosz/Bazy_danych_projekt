@@ -9,13 +9,14 @@ import Button from '@mui/material/Button';
 import { styled } from '@mui/system';
 import { Link } from 'react-router-dom';
 
+import NavigationBar from './NavigationBar';
 import Pacjent from './PatientPanel';
 import Lekarz from './DoctorPanel';
 import logo from './logo.png';
 
 // Dodaj interceptor tutaj
 axios.interceptors.request.use((config) => {
-  const csrfToken = Cookies.get('csrftoken');  // Ustawiana nazwa może być różna, sprawdź w plikach cookie
+  const csrfToken = Cookies.get('csrftoken');
   if (csrfToken) {
     config.headers['X-CSRFToken'] = csrfToken;
   }
@@ -179,26 +180,7 @@ const Login = () => {
 
   return (
     <>
-      <StyledAppBar position="static">
-        <StyledToolbar>
-          <StyledLogo src={logo} alt="PolwroMED Logo" />
-          <Typography variant="h6">
-            PolwroMED
-          </Typography>
-          <StyledButtonsContainer>
-            <Button color="inherit" component={Link} to="/login">
-              Logowanie
-            </Button>
-            <Button color="inherit" component={Link} to="/rejestracja">
-              Rejestracja
-            </Button>
-            <Button color="inherit" component={Link} to="/nasi-lekarze">
-              Nasi lekarze
-            </Button>
-          </StyledButtonsContainer>
-        </StyledToolbar>
-      </StyledAppBar>
-
+      <NavigationBar />
       <StyledFormContainer>
         {loggedIn ? (
           <div>
