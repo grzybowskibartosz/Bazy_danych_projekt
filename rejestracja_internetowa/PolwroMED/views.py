@@ -1,9 +1,16 @@
 from django.contrib.auth import get_user_model, authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.middleware.csrf import get_token
+from django.contrib.auth import authenticate, login
+from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET, require_http_methods
 from rest_framework import generics, status
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET, require_POST
+from rest_framework import generics
+from rest_framework import status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import authentication_classes, permission_classes, api_view
@@ -12,6 +19,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import Pacjent, Lekarz, Gabinet, Wizyta
 from .serializers import GabinetSerializer, UserSerializer, PacjentSerializer, LekarzSerializer, WizytaSerializer
+
+from .models import Lekarz, Gabinet
+from .models import Pacjent, Wizyta
+from .serializers import GabinetSerializer, UserSerializer, PacjentSerializer, LekarzSerializer
+from .serializers import WizytaSerializer
+
+
 
 class PacjentListCreateView(generics.ListCreateAPIView):
     queryset = Pacjent.objects.all()
@@ -156,18 +170,137 @@ class UserInfoView(APIView):
         response = self.get_user_info(request)
         return response
 
-class WizytyPacjentaListView(generics.ListAPIView):
-    serializer_class = WizytaSerializer
-    permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        # Pobierz id pacjenta z parametru URL
-        pacjent_id = self.kwargs['pacjent_id']
+@csrf_exempt
+@login_required
+@require_GET
+def moje_wizyty(request):
+    print("Endpoint moje_wizyty called!")
+    user = request.user
+    pacjent = Pacjent.objects.get(user=user)
+    moje_wizyty = Wizyta.objects.filter(pacjent=pacjent)
 
-        # Pobierz wszystkie wizyty przypisane do danego pacjenta
-        queryset = Wizyta.objects.filter(pacjent__id=pacjent_id)
+    wizyty_data = [
+        {
+            'id': wizyta.id,
+            'opis': wizyta.opis,
+            'data_i_godzina': wizyta.data_i_godzina.isoformat(),
+        }
+        for wizyta in moje_wizyty
+    ]
 
-        return queryset
+    return JsonResponse({"wizyty": wizyty_data})
+
+def wizyty_lekarza(request, lekarz_id):
+    wizyty_zaplanowane = Wizyta.objects.filter(lekarz__id=lekarz_id, status='Zaplanowana')
+    wizyty_odbyte = Wizyta.objects.filter(lekarz__id=lekarz_id, status='Odbyta')
+
+    wizyty_zaplanowane_data = [
+        {
+            'id': wizyta.id,
+            'data_i_godzina': wizyta.data_i_godzina,
+            'pacjent': {
+                'imie': wizyta.pacjent.imie,
+                'nazwisko': wizyta.pacjent.nazwisko,
+            },
+            'gabinet': wizyta.gabinet.numer_gabinetu,
+            'status': wizyta.status,
+            # Dodaj więcej informacji o wizycie, jeśli to konieczne
+        }
+        for wizyta in wizyty_zaplanowane
+    ]
+
+    wizyty_odbyte_data = [
+        {
+            'id': wizyta.id,
+            'data_i_godzina': wizyta.data_i_godzina,
+            'pacjent': {
+                'imie': wizyta.pacjent.imie,
+                'nazwisko': wizyta.pacjent.nazwisko,
+            },
+            'gabinet': wizyta.gabinet.numer_gabinetu,
+            'diagnoza': wizyta.diagnoza,
+            'przepisane_leki': wizyta.przepisane_leki,
+            'notatki_lekarza': wizyta.notatki_lekarza,
+            'status': wizyta.status,
+            # Dodaj więcej informacji o wizycie, jeśli to konieczne
+        }
+        for wizyta in wizyty_odbyte
+    ]
+
+    response_data = {
+        'zaplanowane': wizyty_zaplanowane_data,
+        'odbyte': wizyty_odbyte_data,
+    }
+
+    return JsonResponse(response_data, safe=False)
+
+def wizyty_pacjenta(request, pacjent_id):
+    wizyty_zaplanowane = Wizyta.objects.filter(pacjent__id=pacjent_id, status='Zaplanowana')
+    wizyty_odbyte = Wizyta.objects.filter(pacjent__id=pacjent_id, status='Odbyta')
+
+    wizyty_zaplanowane_data = [
+        {
+            'id': wizyta.id,
+            'data_i_godzina': wizyta.data_i_godzina,
+            'lekarz': {
+                'imie': wizyta.lekarz.imie,
+                'nazwisko': wizyta.lekarz.nazwisko,
+                'specjalizacja': wizyta.lekarz.specjalizacja,
+
+            },
+            'gabinet': wizyta.gabinet.numer_gabinetu,
+            # Dodaj więcej informacji o wizycie, jeśli to konieczne
+        }
+        for wizyta in wizyty_zaplanowane
+    ]
+
+    wizyty_odbyte_data = [
+        {
+            'id': wizyta.id,
+            'data_i_godzina': wizyta.data_i_godzina,
+            'lekarz': {
+                'imie': wizyta.lekarz.imie,
+                'nazwisko': wizyta.lekarz.nazwisko,
+                'specjalizacja': wizyta.lekarz.specjalizacja,
+
+            },
+            'gabinet': wizyta.gabinet.numer_gabinetu,
+            'diagnoza': wizyta.diagnoza,
+            'przepisane_leki': wizyta.przepisane_leki,
+            'notatki_lekarza': wizyta.notatki_lekarza,
+            # Dodaj więcej informacji o wizycie, jeśli to konieczne
+        }
+        for wizyta in wizyty_odbyte
+    ]
+
+    response_data = {
+        'zaplanowane': wizyty_zaplanowane_data,
+        'odbyte': wizyty_odbyte_data,
+    }
+
+    return JsonResponse(response_data, safe=False)
+
+@csrf_exempt
+@require_POST
+@login_required
+def zmien_status_wizyty(request, wizyta_id):
+    try:
+        wizyta = Wizyta.objects.get(pk=wizyta_id)
+    except Wizyta.DoesNotExist:
+        return JsonResponse({'error': 'Wizyta o podanym ID nie istnieje'}, status=404)
+
+    if wizyta.lekarz.user != request.user:
+        return JsonResponse({'error': 'Nie masz uprawnień do zmiany statusu tej wizyty'}, status=403)
+
+    nowy_status = request.POST.get('status')
+    if nowy_status not in ['Zaplanowana', 'Odbyta']:
+        return JsonResponse({'error': 'Nieprawidłowy status wizyty'}, status=400)
+
+    wizyta.status = nowy_status
+    wizyta.save()
+
+    return JsonResponse({'success': True})
 
 
 

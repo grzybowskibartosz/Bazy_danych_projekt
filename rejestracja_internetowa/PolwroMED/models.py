@@ -116,7 +116,7 @@ class Wizyta(models.Model):
             raise ValidationError('Pole "Przepisane leki" jest wymagane dla wizyty odbytej.')
 
         # Ustawianie daty i godziny wizyty tylko w przyszłość
-        if self.data_i_godzina and self.data_i_godzina < timezone.now():
+        if self.status == 'Zaplanowana' and self.data_i_godzina and self.data_i_godzina > timezone.now():
             raise ValidationError("Wizyty można umawiać tylko na przyszłość.")
 
         # Sprawdź, czy nie ma innej wizyty w tym samym gabinecie
@@ -158,4 +158,4 @@ class Wizyta(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f'Wizyta u {self.lekarz} przez {self.pacjent} dnia {self.data_i_godzina} w gabinecie {self.gabinet}'
+        return f'Wizyta u {self.lekarz} przez {self.pacjent} dnia {self.data_i_godzina} w gabinecie {self.gabinet.numer_gabinetu}'
