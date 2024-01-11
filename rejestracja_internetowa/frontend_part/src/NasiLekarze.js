@@ -53,7 +53,7 @@ const NasiLekarze = () => {
 
   return (
     <Box>
-      <NavigationBar />
+      //<NavigationBar />
 
       <Box m={4}>
         <Typography variant="h4" mb={3}>
