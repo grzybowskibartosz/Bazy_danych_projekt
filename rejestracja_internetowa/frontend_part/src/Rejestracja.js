@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import Typography from '@mui/material/Typography';
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
+import {Typography, TextField, Button, Paper} from '@material-ui/core';
 import { styled } from '@mui/system';
 import { Link } from 'react-router-dom';
 import NavigationBar from './NavigationBar';
@@ -152,15 +150,16 @@ const Rejestracja = () => {
         );
       case 2:
         return (
-          <div>
-            <Typography variant="h5">
-              Rejestracja Pacjenta - Potwierdzenie
-            </Typography>
-            <Typography variant="body1">
-              Dziękujemy za rejestrację! Możesz teraz przejść do <Link to="/login">strony logowania</Link>.
-            </Typography>
-            {/* Możesz dodać przycisk do przekierowania na stronę logowania */}
-          </div>
+          <Paper elevation={3} style={{ padding: 20, textAlign: 'center', margin: '20px auto', maxWidth: 400 }}>
+          <Typography variant="h5">Rejestracja przebiegła pomyślnie!</Typography>
+          <Typography variant="body1">
+            Dziękujemy za rejestrację! Możesz teraz przejść do strony logowania.
+          </Typography>
+          {/* Możesz dodać przycisk do przekierowania na stronę logowania */}
+          <Button component={Link} to="/login" variant="contained" color='#primary' style={{ marginTop: 20, backgroundColor: '#26a197', color: 'white' }}>
+            Przejdź do logowania
+          </Button>
+        </Paper>
         );
       default:
         return null;
