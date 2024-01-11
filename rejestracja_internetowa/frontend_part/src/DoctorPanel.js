@@ -1,32 +1,16 @@
-// DoctorPanel.js
-
 import React, { useState, useEffect } from 'react';
 import Typography from '@mui/material/Typography';
 import axios from 'axios';
-import Calendar from 'react-calendar';
-import { useParams } from 'react-router-dom';
-
-import logo from './logo.png';
-import Box from '@mui/material/Box';
-import Grid from '@mui/material/Grid';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import AppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
-import Button from '@mui/material/Button';
-import { styled } from '@mui/system';
-import { Link } from 'react-router-dom';
 
 const DoctorPanel = ({ userData }) => {
   const [wizyty, setWizyty] = useState({ zaplanowane: [], odbyte: [] });
 
   useEffect(() => {
-    // Pobierz dane o wizytach lekarza z backendu
     const fetchWizyty = async () => {
       try {
         const response = await axios.get(`http://localhost:8000/api/wizyty/${userData.id}/lekarz/`);
         const { zaplanowane, odbyte } = response.data;
-        setWizyty({zaplanowane, odbyte});
+        setWizyty({ zaplanowane, odbyte });
       } catch (error) {
         console.error('Błąd pobierania danych o wizytach lekarza', error);
       }
@@ -35,8 +19,26 @@ const DoctorPanel = ({ userData }) => {
     fetchWizyty();
   }, [userData.id]);
 
+const handleStatusChange = async (wizytaId, nowyStatus) => {
+    try {
+      await axios.post(`http://localhost:8000/api/wizyty/${wizytaId}/zmien_status/`, { status: nowyStatus });
+      // Zaktualizuj stan po zmianie statusu
+      const noweWizyty = {
+        zaplanowane: wizyty.zaplanowane.map(wizyta =>
+          wizyta.id === wizytaId ? { ...wizyta, status: nowyStatus } : wizyta
+        ),
+        odbyte: wizyty.odbyte.map(wizyta =>
+          wizyta.id === wizytaId ? { ...wizyta, status: nowyStatus } : wizyta
+        ),
+      };
+      setWizyty(noweWizyty);
+    } catch (error) {
+      console.error('Błąd podczas zmiany statusu wizyty:', error);
+    }
+};
+
   return (
-<div>
+    <div>
       <Typography variant="h5">Panel Lekarza</Typography>
       <p>Imię: {userData.imie}</p>
       <p>Nazwisko: {userData.nazwisko}</p>
@@ -50,6 +52,16 @@ const DoctorPanel = ({ userData }) => {
             {wizyty.zaplanowane.map((wizyta) => (
               <li key={wizyta.id}>
                 Data i godzina: {new Date(wizyta.data_i_godzina).toLocaleString()} | Pacjent: {wizyta.pacjent.imie} {wizyta.pacjent.nazwisko}
+                <br />
+                Gabinet: {wizyta.gabinet || 'Brak danych o gabinecie'}
+                <br />
+                Status: {wizyta.status}
+                <br />
+                {wizyta.status.toLowerCase() === 'zaplanowana' && (
+                  <button onClick={() => handleStatusChange(wizyta.id, 'Odbyta')}>
+                    Zmień status na Odbyta
+                  </button>
+                )}
               </li>
             ))}
           </ul>
@@ -60,6 +72,22 @@ const DoctorPanel = ({ userData }) => {
             {wizyty.odbyte.map((wizyta) => (
               <li key={wizyta.id}>
                 Data i godzina: {new Date(wizyta.data_i_godzina).toLocaleString()} | Pacjent: {wizyta.pacjent.imie} {wizyta.pacjent.nazwisko}
+                <br />
+                Gabinet: {wizyta.gabinet || 'Brak danych o gabinecie'}
+                <br />
+                Diagnoza: {wizyta.diagnoza || 'Brak diagnozy'}
+                <br />
+                Przepisane leki: {wizyta.przepisane_leki || 'Brak przepisanych leków'}
+                <br />
+                Notatki lekarza: {wizyta.notatki_lekarza || 'Brak notatek lekarza'}
+                <br />
+                Status: {wizyta.status}
+                <br />
+                {wizyta.status.toLowerCase() === 'odbyta' && (
+                  <button onClick={() => handleStatusChange(wizyta.id, 'Zaplanowana')}>
+                    Zmień status na Zaplanowana
+                  </button>
+                )}
               </li>
             ))}
           </ul>
