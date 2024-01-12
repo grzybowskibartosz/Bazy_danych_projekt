@@ -1,14 +1,15 @@
-from django.contrib.auth import authenticate, login
-from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate, login, get_user_model, logout
 from django.contrib.auth.decorators import login_required
+from django.middleware.csrf import get_token
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.http import require_GET, require_POST, require_http_methods
 from rest_framework import generics
 from rest_framework import status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
-from rest_framework.decorators import authentication_classes
+from rest_framework.decorators import authentication_classes, api_view
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import BasePermission
 from rest_framework.permissions import IsAuthenticated
@@ -18,6 +19,21 @@ from rest_framework.views import APIView
 from .models import Lekarz, Gabinet
 from .models import Pacjent, Wizyta
 from .serializers import GabinetSerializer, UserSerializer, PacjentSerializer, LekarzSerializer
+from .serializers import WizytaSerializer
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import get_object_or_404
+from django.contrib.auth import authenticate, login
+from django.middleware.csrf import get_token
+
+from django.shortcuts import get_object_or_404
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+
+from .models import Wizyta
 from .serializers import WizytaSerializer
 
 
@@ -53,7 +69,6 @@ class WizytaListCreateView(generics.ListCreateAPIView):
 class WizytaDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Wizyta.objects.all()
     serializer_class = WizytaSerializer
-
 
 User = get_user_model()
 
@@ -104,9 +119,34 @@ class LoginView(APIView):
         if user:
             login(request, user)
             token, created = Token.objects.get_or_create(user=user)
-            return JsonResponse({'token': token.key})
+            user_data = {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                # Dodaj inne informacje o użytkowniku, które chcesz przekazać
+            }
+
+            # Pobierz token CSRF
+            csrf_token = get_token(request)
+
+            # Ustaw nagłówek CSRF Token w odpowiedzi
+            response = Response({'token': token.key, 'user': user_data})
+            response['X-CSRFToken'] = csrf_token
+
+            return response
         else:
-            return JsonResponse({'error': 'Invalid credentials'}, status=401)
+            return Response({'error': 'Invalid credentials'}, status=401)
+class logout_view(APIView):
+    def post(self, request):
+        logout(request)
+        response = JsonResponse({'detail': 'Successfully logged out'})
+        response["Access-Control-Allow-Origin"] = "http://localhost:3000"
+        response["Access-Control-Allow-Credentials"] = "true"
+        response.set_cookie('csrftoken', get_token(request))  # Dodaj tę linię
+        return response
+def csrf_token_view(request):
+    csrf_token = get_token(request)
+    return JsonResponse({'csrfToken': csrf_token})
 
 class IsPatientOrDoctor(BasePermission):
     def has_permission(self, request, view):
@@ -155,6 +195,7 @@ def moje_wizyty(request):
             'id': wizyta.id,
             'opis': wizyta.opis,
             'data_i_godzina': wizyta.data_i_godzina.isoformat(),
+            'status': wizyta.status,
         }
         for wizyta in moje_wizyty
     ]
@@ -173,6 +214,7 @@ def wizyty_lekarza(request, lekarz_id):
                 'imie': wizyta.pacjent.imie,
                 'nazwisko': wizyta.pacjent.nazwisko,
             },
+            'opis': wizyta.opis,
             'gabinet': wizyta.gabinet.numer_gabinetu,
             'status': wizyta.status,
             # Dodaj więcej informacji o wizycie, jeśli to konieczne
@@ -205,6 +247,7 @@ def wizyty_lekarza(request, lekarz_id):
 
     return JsonResponse(response_data, safe=False)
 
+
 def wizyty_pacjenta(request, pacjent_id):
     wizyty_zaplanowane = Wizyta.objects.filter(pacjent__id=pacjent_id, status='Zaplanowana')
     wizyty_odbyte = Wizyta.objects.filter(pacjent__id=pacjent_id, status='Odbyta')
@@ -219,7 +262,9 @@ def wizyty_pacjenta(request, pacjent_id):
                 'specjalizacja': wizyta.lekarz.specjalizacja,
 
             },
+            'opis' : wizyta.opis,
             'gabinet': wizyta.gabinet.numer_gabinetu,
+            'status': wizyta.status,
             # Dodaj więcej informacji o wizycie, jeśli to konieczne
         }
         for wizyta in wizyty_zaplanowane
@@ -236,9 +281,12 @@ def wizyty_pacjenta(request, pacjent_id):
 
             },
             'gabinet': wizyta.gabinet.numer_gabinetu,
+            'opis': wizyta.opis,
             'diagnoza': wizyta.diagnoza,
             'przepisane_leki': wizyta.przepisane_leki,
             'notatki_lekarza': wizyta.notatki_lekarza,
+            'status': wizyta.status,
+
             # Dodaj więcej informacji o wizycie, jeśli to konieczne
         }
         for wizyta in wizyty_odbyte
@@ -251,26 +299,95 @@ def wizyty_pacjenta(request, pacjent_id):
 
     return JsonResponse(response_data, safe=False)
 
-@csrf_exempt
-@require_POST
-@login_required
-def zmien_status_wizyty(request, wizyta_id):
-    try:
-        wizyta = Wizyta.objects.get(pk=wizyta_id)
-    except Wizyta.DoesNotExist:
-        return JsonResponse({'error': 'Wizyta o podanym ID nie istnieje'}, status=404)
 
-    if wizyta.lekarz.user != request.user:
-        return JsonResponse({'error': 'Nie masz uprawnień do zmiany statusu tej wizyty'}, status=403)
+class UpdateWizyta(APIView):
+    def post(self, request, wizyta_id):
+        wizyta = get_object_or_404(Wizyta, pk=wizyta_id)
 
-    nowy_status = request.POST.get('status')
-    if nowy_status not in ['Zaplanowana', 'Odbyta']:
-        return JsonResponse({'error': 'Nieprawidłowy status wizyty'}, status=400)
+        # Pobierz dane z żądania
+        status_wizyty = request.data.get('status', None)
 
-    wizyta.status = nowy_status
-    wizyta.save()
+        # Sprawdź, czy status został przekazany
+        if status_wizyty is not None:
+            # Aktualizuj status wizyty
+            wizyta.status = status_wizyty
 
-    return JsonResponse({'success': True})
+            # Aktualizuj dodatkowe pola tylko jeśli status to 'odbyta'
+            if status_wizyty == 'Odbyta':
+                diagnoza = request.data.get('diagnoza', None)
+                przepisane_leki = request.data.get('przepisane_leki', None)
+                notatki_lekarza = request.data.get('notatki_lekarza', None)
+
+                # Aktualizuj pola tylko jeśli przekazano wartość
+                if diagnoza is not None:
+                    wizyta.diagnoza = diagnoza
+                if przepisane_leki is not None:
+                    wizyta.przepisane_leki = przepisane_leki
+                if notatki_lekarza is not None:
+                    wizyta.notatki_lekarza = notatki_lekarza
+
+                # Tutaj możesz dodać kod do aktualizacji innych pól wizyty
+
+            # Zapisz zmiany
+            wizyta.save()
+
+            # Zserializuj i zwróć zaktualizowane dane wizyty
+            serializer = WizytaSerializer(wizyta)
+            return Response(serializer.data)
+
+        # Domyślna odpowiedź w przypadku braku przekazanego statusu
+        return Response({'error': 'Nieprawidłowe dane żądania.'}, status=status.HTTP_400_BAD_REQUEST)
+
+class CancelWizyta(APIView):
+    def post(self, request, wizyta_id):
+        wizyta = get_object_or_404(Wizyta, pk=wizyta_id)
+
+        # Pobierz dane z żądania
+        status_wizyty = request.data.get('status', None)
+
+        # Sprawdź, czy status został przekazany
+        if status_wizyty is not None:
+            # Aktualizuj status wizyty
+            wizyta.status = status_wizyty
+
+            # Aktualizuj dodatkowe pola tylko jeśli status to 'odbyta'
+            if status_wizyty == 'Odbyta':
+                diagnoza = request.data.get('diagnoza', None)
+                przepisane_leki = request.data.get('przepisane_leki', None)
+                notatki_lekarza = request.data.get('notatki_lekarza', None)
+
+                # Aktualizuj pola tylko jeśli przekazano wartość
+                if diagnoza is not None:
+                    wizyta.diagnoza = diagnoza
+                if przepisane_leki is not None:
+                    wizyta.przepisane_leki = przepisane_leki
+                if notatki_lekarza is not None:
+                    wizyta.notatki_lekarza = notatki_lekarza
+
+                # Tutaj możesz dodać kod do aktualizacji innych pól wizyty
+
+            # Zapisz zmiany
+            wizyta.save()
+
+            # Zserializuj i zwróć zaktualizowane dane wizyty
+            serializer = WizytaSerializer(wizyta)
+            return Response(serializer.data)
+
+        # Domyślna odpowiedź w przypadku braku przekazanego statusu
+        return Response({'error': 'Nieprawidłowe dane żądania.'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+    def get_object(self, wizyta_id):
+        try:
+            return Wizyta.objects.get(pk=wizyta_id)
+        except Wizyta.DoesNotExist:
+            raise Response({'error': 'Wizyta o podanym identyfikatorze nie istnieje.'}, status=status.HTTP_404_NOT_FOUND)
+
+    def get_object(self, wizyta_id):
+        try:
+            return Wizyta.objects.get(pk=wizyta_id)
+        except Wizyta.DoesNotExist:
+            raise Response({'error': 'Wizyta o podanym identyfikatorze nie istnieje.'}, status=status.HTTP_404_NOT_FOUND)
 
 
 class NasiLekarzeView(APIView):

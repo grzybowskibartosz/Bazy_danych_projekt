@@ -88,6 +88,28 @@ class Wizyta(models.Model):
     przepisane_leki = models.TextField(blank=True)
     notatki_lekarza = models.TextField(blank=True)
 
+    def update_visit(self, status, diagnoza, przepisane_leki, notatki_lekarza):
+        if status:
+            self.status = status
+        if diagnoza:
+            self.diagnoza = diagnoza
+        if przepisane_leki:
+            self.przepisane_leki = przepisane_leki
+        if notatki_lekarza:
+            self.notatki_lekarza = notatki_lekarza
+        self.save()
+
+    def cancel_visit(self, status, diagnoza, przepisane_leki, notatki_lekarza):
+        if status:
+            self.status = status
+        if diagnoza:
+            self.diagnoza = diagnoza
+        if przepisane_leki:
+            self.przepisane_leki = przepisane_leki
+        if notatki_lekarza:
+            self.notatki_lekarza = notatki_lekarza
+        self.save()
+
     def clean(self):
         # Sprawdź, czy lekarz jest dostępny w podanym terminie tylko dla nowych wizyt
         if self._state.adding and self.status == 'Zaplanowana':

@@ -13,6 +13,7 @@ import { useHistory } from 'react-router-dom';
 
 import axios from 'axios';
 import logo from './logo.png';
+import NavigationBar from './NavigationBar'
 
 const StyledAppBar = styled(AppBar)({
   backgroundColor: '#26a197',
@@ -52,26 +53,7 @@ const NasiLekarze = () => {
 
   return (
     <Box>
-      <StyledAppBar position="static">
-        <StyledToolbar>
-          <StyledLogo src={logo} alt="PolwroMED Logo" />
-          <Typography variant="h6">PolwroMED</Typography>
-          <StyledButtonsContainer>
-            <Button color="inherit" component={Link} to="/">
-              Strona Główna
-            </Button>
-            <Button color="inherit" component={Link} to="/login">
-              Logowanie
-            </Button>
-            <Button color="inherit" component={Link} to="/rejestracja">
-              Rejestracja
-            </Button>
-            <Button color="inherit" component={Link} to="/nasi-lekarze">
-              Nasi lekarze
-            </Button>
-          </StyledButtonsContainer>
-        </StyledToolbar>
-      </StyledAppBar>
+      <NavigationBar />
 
       <Box m={4}>
         <Typography variant="h4" mb={3}>

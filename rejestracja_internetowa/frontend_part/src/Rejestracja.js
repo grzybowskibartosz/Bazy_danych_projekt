@@ -5,18 +5,7 @@ import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import { styled } from '@mui/system';
 import { Link } from 'react-router-dom';
-import AppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
-import logo from './logo.png';
-
-const StyledAppBar = styled(AppBar)({
-  backgroundColor: '#26a197',
-});
-
-const StyledToolbar = styled(Toolbar)({
-  display: 'flex',
-  justifyContent: 'flex start',
-});
+import NavigationBar from './NavigationBar';
 
 const StyledButtonsContainer = styled('div')({
   display: 'flex',
@@ -56,6 +45,7 @@ const Rejestracja = () => {
     adres: '',
     email: '',
     haslo: '',
+    inne_informacje: '',
   });
 
   const handleInputChange = (e) => {
@@ -93,27 +83,7 @@ const Rejestracja = () => {
       case 1:
         return (
         <div>
-          <StyledAppBar position="static">
-            <StyledToolbar>
-              <StyledLogo src={logo} alt="PolwroMED Logo" />
-              <Typography variant="h6">PolwroMED</Typography>
-              <StyledButtonsContainer>
-                <Button color="inherit" component={Link} to="/">
-                    Strona Główna
-                </Button>
-                <Button color="inherit" component={Link} to="/login">
-                  Logowanie
-                </Button>
-                <Button color="inherit" component={Link} to="/rejestracja">
-                  Rejestracja
-                </Button>
-                <Button color="inherit" component={Link} to="/nasi-lekarze">
-                  Nasi lekarze
-                </Button>
-              </StyledButtonsContainer>
-            </StyledToolbar>
-          </StyledAppBar>
-
+          <NavigationBar />
           <StyledFormContainer>
             <Typography variant="h5">Rejestracja Pacjenta - Etap 1</Typography>
             <StyledForm>

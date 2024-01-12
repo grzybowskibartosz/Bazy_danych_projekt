@@ -2,7 +2,8 @@ from django.urls import path, include
 from django.contrib import admin
 from .views import PacjentListCreateView, PacjentDetailView, LekarzListCreateView, LekarzDetailView, WizytaListCreateView, \
                    WizytaDetailView, GabinetListCreateView, GabinetDetailView, RejestracjaView, LoginView, UserInfoView, \
-    moje_wizyty, wizyty_lekarza, wizyty_pacjenta, zmien_status_wizyty , NasiLekarzeView, zajete_terminy_na_dzien
+    moje_wizyty, wizyty_lekarza, wizyty_pacjenta, NasiLekarzeView, logout_view, csrf_token_view , zajete_terminy_na_dzien, UpdateWizyta, CancelWizyta
+
 
 from PolwroMED import views
 
@@ -36,14 +37,16 @@ urlpatterns = [
 
     path('api/wizyty/<int:pacjent_id>/pacjent/', wizyty_pacjenta, name='wizyty_pacjenta'),
 
-    path('api/wizyty/<int:wizyta_id>/zmien_status/', views.zmien_status_wizyty, name='zmien_status_wizyty'),
+    path('api/wizyty/<int:wizyta_id>/update/', UpdateWizyta.as_view(), name='update_wizyta'),
+
+    path('api/wizyty/<int:wizyta_id>/update/', CancelWizyta.as_view(), name='update_wizyta'),
 
     path('api/nasi-lekarze/', NasiLekarzeView.as_view(), name='nasi-lekarze'),
 
     path('api/zajete-terminy-nowy/<int:lekarz_id>/<int:rok>/<int:miesiac>/<int:dzien>/',
          zajete_terminy_na_dzien, name='zajete-terminy-nowy'),
 
-    #path('api/umow-wizyte/<int:wizyta_id>/', UmowWizyteView.as_view(), name='umow-wizyte'),
+    path('api/logout/', logout_view.as_view(), name='logout'),
 
-
+    path('api/csrf_token/', csrf_token_view, name='csrf_token'),
 ]
