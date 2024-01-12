@@ -171,7 +171,6 @@ class UserInfoView(APIView):
         return response
 
 
-@csrf_exempt
 @login_required
 @require_GET
 def moje_wizyty(request):
