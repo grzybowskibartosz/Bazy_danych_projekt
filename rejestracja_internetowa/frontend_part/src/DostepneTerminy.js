@@ -1,47 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
 import axios from 'axios';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 
-import logo from './logo.png';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
-import Grid from '@mui/material/Grid';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import AppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
-import Button from '@mui/material/Button';
-import { styled } from '@mui/system';
-import { Link } from 'react-router-dom';
+import NavigationBar from './NavigationBar'
+import {Typography, Box, Grid, CardContent, Card, Button, styled, Dialog, DialogActions,
+        DialogContent, DialogContentText, DialogTitle} from '@material-ui/core';
 
 const StyledButton = styled(Button)({
   marginTop: '16px',
-  backgroundColor: '#26a197'
-});
-
-const StyledAppBar = styled(AppBar)({
   backgroundColor: '#26a197',
-  position: 'fixed',
-  top: 0,
-  width: '100%',
-  zIndex: 1000,
-});
+  transition: 'transform 0.2s', // Dodajemy transition dla efektu płynnego przejścia
 
-const StyledToolbar = styled(Toolbar)({
-  display: 'flex',
-  justifyContent: 'flex-start',
-});
-
-const StyledButtonsContainer = styled('div')({
-  display: 'flex',
-  gap: '10px',
-  marginLeft: 'auto',
-});
-
-const StyledLogo = styled('img')({
-  height: '70px',
-  margin: '10px 0',
+  ':hover': {
+    transform: 'scale(1.1)', // Zmieniamy rozmiar na 110% po najechaniu kursorem
+    backgroundColor: '#26a197 !important', // Ustawiamy kolor tła na stałe, ignorując domyślne style
+  },
 });
 
 const DostepneTerminy = () => {
@@ -52,6 +26,8 @@ const DostepneTerminy = () => {
   const [rok, setRok] = useState(selectedDate.getFullYear());
   const [miesiac, setMiesiac] = useState(selectedDate.getMonth() + 1);
   const [dzien, setDzien] = useState(selectedDate.getDate());
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('authToken'));
+  const [openDialog, setOpenDialog] = useState(false);
 
   useEffect(() => {
     if (lekarzId) {
@@ -66,6 +42,7 @@ const DostepneTerminy = () => {
           const dostepneTerminy = wszystkieTerminy.filter(termin => !czyTerminJestZajety(termin, zajeteTerminy));
 
           setDostepneTerminy(dostepneTerminy);
+
         })
         .catch(error => console.error('Błąd pobierania informacji o godzinach pracy lekarza:', error));
     }
@@ -76,6 +53,22 @@ const DostepneTerminy = () => {
     setRok(date.getFullYear());
     setMiesiac(date.getMonth() + 1);
     setDzien(date.getDate());
+
+  };
+
+  const handleReservationClick = () => {
+    if (isAuthenticated) {
+      // Przekieruj do podstrony rezerwacji
+      // Możesz także przekazać dodatkowe informacje, takie jak wybrana data
+      window.location.href = '/rezerwacje';
+    } else {
+      // Wyświetl okno dialogowe
+      setOpenDialog(true);
+    }
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
   };
 
   const generujWszystkieTerminy = (selectedDate) => {
@@ -102,26 +95,7 @@ const DostepneTerminy = () => {
 
   return (
     <div>
-      <StyledAppBar position="static">
-        <StyledToolbar>
-          <StyledLogo src={logo} alt="PolwroMED Logo" />
-          <Typography variant="h6">PolwroMED</Typography>
-          <StyledButtonsContainer>
-            <Button color="inherit" component={Link} to="/">
-              Strona Główna
-            </Button>
-            <Button color="inherit" component={Link} to="/login">
-              Logowanie
-            </Button>
-            <Button color="inherit" component={Link} to="/rejestracja">
-              Rejestracja
-            </Button>
-            <Button color="inherit" component={Link} to="/nasi-lekarze">
-              Nasi lekarze
-            </Button>
-          </StyledButtonsContainer>
-        </StyledToolbar>
-      </StyledAppBar>
+      <NavigationBar />
       <Box ml={40} mr={40} mt={12}>
         <h1>Dostępne terminy</h1>
         <Calendar onChange={handleDateChange} value={selectedDate} />
@@ -139,9 +113,7 @@ const DostepneTerminy = () => {
                       <Typography variant="body2" color="text.secondary">
                         {termin.toLocaleString()}
                       </Typography>
-                      <StyledButton
-                       variant="contained"
-                       color="primary">
+                      <StyledButton variant="contained" onClick={handleReservationClick}>
                         Rezerwacja
                       </StyledButton>
                     </CardContent>
@@ -153,6 +125,25 @@ const DostepneTerminy = () => {
         ) : (
           <p>Brak dostępnych terminów na wybrany dzień.</p>
         )}
+
+        {/* Dialog dla niezalogowanego użytkownika */}
+        <Dialog open={openDialog} onClose={handleCloseDialog}>
+          <DialogTitle>Zaloguj się lub zarejestruj</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Aby dokonać rezerwacji, musisz być zalogowany. Jeśli nie masz jeszcze konta, zarejestruj się.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDialog}>Zamknij</Button>
+            <Button component={Link} to="/login" color="primary">
+              Zaloguj się
+            </Button>
+            <Button component={Link} to="/rejestracja" color="primary">
+              Zarejestruj się
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     </div>
   );

@@ -1,42 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
-import Grid from '@mui/material/Grid';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import AppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
-import Button from '@mui/material/Button';
-import { styled } from '@mui/system';
-import { Link, useNavigate } from 'react-router-dom';  // Zmiana importu
-import { useHistory } from 'react-router-dom';
-
+import { Link } from 'react-router-dom';
 import axios from 'axios';
-import logo from './logo.png';
+import {Box, Grid, Card, CardContent, Button, Typography} from '@material-ui/core';
 import NavigationBar from './NavigationBar'
 
-const StyledAppBar = styled(AppBar)({
-  backgroundColor: '#26a197',
-});
-
-const StyledToolbar = styled(Toolbar)({
-  display: 'flex',
-  justifyContent: 'flex start',
-});
-
-const StyledButtonsContainer = styled('div')({
-  display: 'flex',
-  gap: '10px',
-  marginLeft: 'auto',
-});
-
-const StyledLogo = styled('img')({
-  height: '70px',
-  margin: '10px 0',
-});
 
 const NasiLekarze = () => {
-  const navigate = useNavigate();  // Zmiana na useNavigate
   const [lekarze, setLekarze] = useState([]);
 
   useEffect(() => {
@@ -46,14 +15,9 @@ const NasiLekarze = () => {
       .catch(error => console.error('Błąd pobierania danych o lekarzach:', error));
   }, []);
 
-  const handleDostepneTerminyClick = (lekarzId) => {
-    // Przenieś użytkownika do strony z dostępnymi terminami danego lekarza
-    navigate(`/dostepne-terminy/${lekarzId}`);
-  };
-
   return (
     <Box>
-      //<NavigationBar />
+      <NavigationBar />
 
       <Box m={4}>
         <Typography variant="h4" mb={3}>

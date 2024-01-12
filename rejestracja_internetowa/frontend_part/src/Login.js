@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import Cookies from 'js-cookie';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
@@ -13,15 +12,6 @@ import NavigationBar from './NavigationBar';
 import Pacjent from './PatientPanel';
 import Lekarz from './DoctorPanel';
 import logo from './logo.png';
-
-// Dodaj interceptor tutaj
-axios.interceptors.request.use((config) => {
-  const csrfToken = Cookies.get('csrftoken');
-  if (csrfToken) {
-    config.headers['X-CSRFToken'] = csrfToken;
-  }
-  return config;
-});
 
 const StyledAppBar = styled(AppBar)({
   backgroundColor: '#26a197',
@@ -90,63 +80,65 @@ const Login = () => {
   const handleLogin = async () => {
     try {
       const response = await axios.post('http://localhost:8000/api/login/', loginData);
-      const authToken = response.data.token;
+      const token = response.data.token;
 
-      // Zapisz token w localStorage
-      localStorage.setItem('authToken', authToken);
+      localStorage.setItem('authToken', token);
 
-      // Zapisz token CSRF w localStorage
-      const csrfToken = response.headers['x-csrftoken'];
-      localStorage.setItem('csrfToken', csrfToken);
+      console.log('Zalogowano:', token);
 
-      console.log('Zalogowano:', authToken);
       setLoggedIn(true);
-      setLoginError('');
+
       getUserInfo();
+
+      window.location.reload();
+
+
     } catch (error) {
       console.error('Błąd logowania:', error);
       setLoggedIn(false);
-      setLoginError('Błąd logowania. Sprawdź poprawność danych.');
     }
   };
+
+  const handleLogout = async () => {
+  try {
+    const authToken = localStorage.getItem('authToken');
+    console.log('Pobrany token:', authToken);
+
+    const response = await axios.post('http://localhost:8000/api/logout/', null, {
+      headers: {
+        Authorization: `Token ${authToken}`,
+      },
+    });
+
+    // Pomyślne wylogowanie - usuń token z pamięci lokalnej
+    localStorage.removeItem('authToken');
+
+    window.location.reload();
+
+
+    // Przekierowanie lub aktualizacja interfejsu użytkownika
+  } catch (error) {
+    // Obsługa błędów, np. brak autoryzacji
+    console.error('Error during logout:', error);
+  }
+};
 
   const getUserInfo = async () => {
     try {
       const token = localStorage.getItem('authToken');
+
       const response = await axios.get('http://localhost:8000/api/get_user_info/', {
         headers: {
           Authorization: `Token ${token}`,
         },
       });
       const userInfo = response.data;
-      setUserInfo(userInfo);
+
+      console.log(userInfo);
+
+
     } catch (error) {
       console.error('Błąd pobierania informacji o użytkowniku:', error);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      // Dodaj obsługę wylogowania
-      setLoggedIn(false);
-
-      // Pobierz token CSRF z localStorage
-      const csrfToken = localStorage.getItem('csrfToken');
-      console.log('CSRF Token przed wylogowaniem:', csrfToken);
-
-      // Wyślij żądanie wylogowania z użyciem tokena CSRF
-      await axios.post('http://localhost:8000/api/logout/', null, {
-        headers: {
-          'X-CSRFToken': csrfToken,
-        },
-      });
-      console.log('Wylogowano pomyślnie.');
-
-      // Usuń tokeny z localStorage
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('csrfToken');
-    } catch (error) {
-      console.error('Błąd wylogowywania:', error);
     }
   };
 
@@ -187,7 +179,7 @@ const Login = () => {
             <Typography variant="h5">Jesteś zalogowany</Typography>
             {userInfo.role === 'patient' && <Pacjent userData={userInfo.user_data} />}
             {userInfo.role === 'doctor' && <Lekarz userData={userInfo.user_data} />}
-            <Button variant="contained" color="secondary" onClick={handleLogout}>
+            <Button variant="contained" color="secondary" onClick={handleLogout} >
               Wyloguj
             </Button>
           </div>
@@ -215,11 +207,7 @@ const Login = () => {
                   {loginError}
                 </Typography>
               )}
-              <StyledButton
-                variant="contained"
-                color="primary"
-                onClick={handleLogin}
-              >
+              <StyledButton variant="contained" color="primary" onClick={handleLogin}>
                 Zaloguj
               </StyledButton>
               <Link to="/">Przejdź do strony głównej</Link>

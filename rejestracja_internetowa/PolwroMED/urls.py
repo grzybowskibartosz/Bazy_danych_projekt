@@ -1,10 +1,8 @@
-from django.urls import path, include
-from django.contrib import admin
-from .views import PacjentListCreateView, PacjentDetailView, LekarzListCreateView, LekarzDetailView, WizytaListCreateView, \
-                   WizytaDetailView, GabinetListCreateView, GabinetDetailView, RejestracjaView, LoginView, UserInfoView,   \
-                   NasiLekarzeView, zajete_terminy_na_dzien, logout_view, csrf_token_view, \
-                   WizytaDetailView, GabinetListCreateView, GabinetDetailView, RejestracjaView, LoginView, UserInfoView, \
-                   moje_wizyty, wizyty_lekarza, wizyty_pacjenta, zmien_status_wizyty, NasiLekarzeView, zajete_terminy_na_dzien
+from django.urls import path
+from .views import PacjentListCreateView, PacjentDetailView, LekarzListCreateView, LekarzDetailView, WizytaListCreateView,      \
+                   WizytaDetailView, GabinetListCreateView, GabinetDetailView, RejestracjaView, LoginView, UserInfoView,        \
+                   moje_wizyty, wizyty_lekarza, wizyty_pacjenta, zmien_status_wizyty, NasiLekarzeView, log_out_view,              \
+                   zajete_terminy_na_dzien, rezerwacja_view
 
 urlpatterns = [
 
@@ -27,6 +25,9 @@ urlpatterns = [
     path('api/rejestracja/', RejestracjaView.as_view(), name='rejestracja'),
 
     path('api/login/', LoginView.as_view(), name='login'),
+    path('api/logout/', log_out_view, name='logout'),
+
+    path('api/rezerwacje/', rezerwacja_view, name='rezerwacje'),
 
     path('api/get_user_info/', UserInfoView.as_view(), name='get_user_info'),
 
@@ -42,8 +43,4 @@ urlpatterns = [
 
     path('api/zajete-terminy-nowy/<int:lekarz_id>/<int:rok>/<int:miesiac>/<int:dzien>/',
          zajete_terminy_na_dzien, name='zajete-terminy-nowy'),
-
-    path('api/logout/', logout_view.as_view(), name='logout'),
-
-    path('api/csrf_token/', csrf_token_view, name='csrf_token'),
 ]

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import Cookies from 'js-cookie';
-import {AppBar, Toolbar, Typography, Button, Grid } from '@material-ui/core';
+import {AppBar, Toolbar, Typography, Button} from '@material-ui/core';
 import { styled } from '@mui/system';
 import { Link } from 'react-router-dom';
 import logo from './logo.png';
@@ -29,30 +28,26 @@ const StyledLogo = styled('img')({
 const NavigationBar = () => {
   const [loggedIn, setLoggedIn] = useState(false);
   const [userName, setUserName] = useState('');
+  const [role, setRole] = useState('');
 
   const handleLogout = async () => {
-    try {
-      // Dodaj obsługę wylogowania
-      setLoggedIn(false);
+      try {
+        const authToken = localStorage.getItem('authToken');
+        console.log('Pobrany token:', authToken);
 
-      // Pobierz token CSRF z localStorage
-      const csrfToken = localStorage.getItem('csrfToken');
-      console.log('CSRF Token przed wylogowaniem:', csrfToken);
+        await axios.post('http://localhost:8000/api/logout/', null, {
+          headers: {
+            Authorization: `Token ${authToken}`,
+          },
+        });
 
-      // Wyślij żądanie wylogowania z użyciem tokena CSRF
-      await axios.post('http://localhost:8000/api/logout/', null, {
-        headers: {
-          'X-CSRFToken': csrfToken,
-        },
-      });
-      console.log('Wylogowano pomyślnie.');
+        localStorage.removeItem('authToken');
 
-      // Usuń tokeny z localStorage
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('csrfToken');
-    } catch (error) {
-      console.error('Błąd wylogowywania:', error);
-    }
+        window.location.reload();
+
+      } catch (error) {
+        console.error('Error during logout:', error);
+      }
   };
 
   useEffect(() => {
@@ -69,7 +64,8 @@ const NavigationBar = () => {
           });
           const userInfo = response.data;
           setLoggedIn(true);
-          setUserName(userInfo.user_data.imie); // Załóżmy, że imię użytkownika jest dostępne
+          setUserName(userInfo.user_data.imie);
+          setRole(userInfo.role)
         } else {
           setLoggedIn(false);
           setUserName('');
@@ -84,50 +80,60 @@ const NavigationBar = () => {
     checkLoginStatus();
   }, []); // Pusta tablica oznacza, że useEffect będzie wywołane tylko raz, po zamontowaniu komponentu
 
-return (
-    <StyledAppBar position="static">
-      <StyledToolbar>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <StyledLogo src={logo} alt="PolwroMED Logo" />
-          <Typography variant="h6" style={{ marginLeft: 10 }}>
-            PolwroMED
-          </Typography>
-        </div>
-        {loggedIn ? (
-          <Typography variant="subtitle1" color="inherit">
-            Witaj, {userName}!
-          </Typography>
-        ) : (
-          <StyledButtonsContainer>
-            <Button color="inherit" component={Link} to="/">
-              Strona główna
-            </Button>
-            <Button color="inherit" component={Link} to="/login">
-              Logowanie
-            </Button>
-            <Button color="inherit" component={Link} to="/rejestracja">
-              Rejestracja
-            </Button>
-            <Button color="inherit" component={Link} to="/nasi-lekarze">
-              Nasi lekarze
-            </Button>
-          </StyledButtonsContainer>
-        )}
+  return (
+  <StyledAppBar position="static">
+    <StyledToolbar>
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        <StyledLogo src={logo} alt="PolwroMED Logo" />
+        <Typography variant="h6" style={{ marginLeft: 10 }}>
+          PolwroMED
+        </Typography>
         {loggedIn && (
-          <StyledButtonsContainer>
-            <Button color="inherit" onClick={handleLogout}>
-              Wyloguj
-            </Button>
-            <Button color="inherit" component={Link} to="/">
-              Strona główna
-            </Button>
-            <Button color="inherit" component={Link} to="/nasi-lekarze">
-              Nasi lekarze
-            </Button>
-          </StyledButtonsContainer>
+          <Typography variant="h6" style={{ marginLeft: 10 }}>
+            | Witaj, {userName}!
+          </Typography>
         )}
-      </StyledToolbar>
-    </StyledAppBar>
-  );
+      </div>
+      {!loggedIn ? (
+        <StyledButtonsContainer>
+          <Button color="inherit" component={Link} to="/">
+            Strona główna
+          </Button>
+          <Button color="inherit" component={Link} to="/login">
+            Logowanie
+          </Button>
+          <Button color="inherit" component={Link} to="/rejestracja">
+            Rejestracja
+          </Button>
+          <Button color="inherit" component={Link} to="/nasi-lekarze">
+            Nasi lekarze
+          </Button>
+        </StyledButtonsContainer>
+      ) : (
+        <StyledButtonsContainer>
+          <Button color="inherit" onClick={handleLogout}>
+            Wyloguj
+          </Button>
+          <Button color="inherit" component={Link} to="/">
+            Strona główna
+          </Button>
+          <Button color="inherit" component={Link} to="/nasi-lekarze">
+            Nasi lekarze
+          </Button>
+          {role === "patient" ? (
+            <Button color="inherit" component={Link} to="/login">
+              Panel pacjenta
+            </Button>
+          ) : (
+            <Button color="inherit" component={Link} to="/login">
+              Panel lekarza
+            </Button>
+          )}
+        </StyledButtonsContainer>
+      )}
+    </StyledToolbar>
+  </StyledAppBar>
+);
+
 };
 export default NavigationBar;

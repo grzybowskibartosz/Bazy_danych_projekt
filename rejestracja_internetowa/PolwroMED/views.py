@@ -1,14 +1,13 @@
 from django.contrib.auth import get_user_model, authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.middleware.csrf import get_token
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET, require_http_methods
 from rest_framework import generics, status
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework import generics
 from rest_framework import status
 from rest_framework.authentication import TokenAuthentication
@@ -16,51 +15,18 @@ from rest_framework.authtoken.models import Token
 from rest_framework.decorators import authentication_classes, permission_classes, api_view
 from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
+from rest_framework.views import APIView, View
 from .models import Pacjent, Lekarz, Gabinet, Wizyta
 from .serializers import GabinetSerializer, UserSerializer, PacjentSerializer, LekarzSerializer, WizytaSerializer
 
-from .models import Lekarz, Gabinet
-from .models import Pacjent, Wizyta
-from .serializers import GabinetSerializer, UserSerializer, PacjentSerializer, LekarzSerializer
-from .serializers import WizytaSerializer
-
-
-
-class PacjentListCreateView(generics.ListCreateAPIView):
-    queryset = Pacjent.objects.all()
-    serializer_class = PacjentSerializer
-
-class PacjentDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Pacjent.objects.all()
-    serializer_class = PacjentSerializer
-
-class LekarzListCreateView(generics.ListCreateAPIView):
-    queryset = Lekarz.objects.all()
-    serializer_class = LekarzSerializer
-
-class LekarzDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Lekarz.objects.all()
-    serializer_class = LekarzSerializer
-
-class GabinetListCreateView(generics.ListCreateAPIView):
-    queryset = Gabinet.objects.all()
-    serializer_class = GabinetSerializer
-
-class GabinetDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Gabinet.objects.all()
-    serializer_class = GabinetSerializer
-
-class WizytaListCreateView(generics.ListCreateAPIView):
-    queryset = Wizyta.objects.all()
-    serializer_class = WizytaSerializer
-
-class WizytaDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Wizyta.objects.all()
-    serializer_class = WizytaSerializer
-
-
 User = get_user_model()
+
+@csrf_exempt
+def rezerwacja_view(request):
+
+    return
+
+
 
 class RejestracjaView(APIView):
     def post(self, request, *args, **kwargs):
@@ -99,9 +65,9 @@ class RejestracjaView(APIView):
             print("Exception:", str(e))
             return Response({'error': 'Internal Server Error'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
 class LoginView(APIView):
     def post(self, request):
+
         username = request.data.get('username')
         password = request.data.get('password')
         user = authenticate(request, username=username, password=password)
@@ -109,35 +75,19 @@ class LoginView(APIView):
         if user:
             login(request, user)
             token, created = Token.objects.get_or_create(user=user)
-            user_data = {
-                'id': user.id,
-                'username': user.username,
-                'email': user.email,
-                # Dodaj inne informacje o użytkowniku, które chcesz przekazać
-            }
+            return Response({'token': token.key})
 
-            # Pobierz token CSRF
-            csrf_token = get_token(request)
-
-            # Ustaw nagłówek CSRF Token w odpowiedzi
-            response = Response({'token': token.key, 'user': user_data})
-            response['X-CSRFToken'] = csrf_token
-
-            return response
         else:
             return Response({'error': 'Invalid credentials'}, status=401)
-class logout_view(APIView):
-    def post(self, request):
-        logout(request)
-        response = JsonResponse({'detail': 'Successfully logged out'})
-        response["Access-Control-Allow-Origin"] = "http://localhost:3000"
-        response["Access-Control-Allow-Credentials"] = "true"
-        response.set_cookie('csrftoken', get_token(request))  # Dodaj tę linię
-        return response
-def csrf_token_view(request):
-    csrf_token = get_token(request)
-    return JsonResponse({'csrfToken': csrf_token})
 
+@csrf_exempt
+def log_out_view(request):
+    if request.method == 'POST':
+        # Wyloguj użytkownika
+        logout(request)
+        return JsonResponse({'message': 'Wylogowano pomyślnie'})
+    else:
+        return JsonResponse({'error': 'Invalid request method'})
 class IsPatientOrDoctor(BasePermission):
     def has_permission(self, request, view):
         user = request.user
@@ -280,7 +230,6 @@ def wizyty_pacjenta(request, pacjent_id):
 
     return JsonResponse(response_data, safe=False)
 
-@csrf_exempt
 @require_POST
 @login_required
 def zmien_status_wizyty(request, wizyta_id):
@@ -333,3 +282,38 @@ def zajete_terminy_na_dzien(request, lekarz_id, rok, miesiac, dzien):
             'koniec': lekarz.godziny_pracy_koniec.isoformat(),
         },
     })
+
+
+
+
+class PacjentListCreateView(generics.ListCreateAPIView):
+    queryset = Pacjent.objects.all()
+    serializer_class = PacjentSerializer
+
+class PacjentDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Pacjent.objects.all()
+    serializer_class = PacjentSerializer
+
+class LekarzListCreateView(generics.ListCreateAPIView):
+    queryset = Lekarz.objects.all()
+    serializer_class = LekarzSerializer
+
+class LekarzDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Lekarz.objects.all()
+    serializer_class = LekarzSerializer
+
+class GabinetListCreateView(generics.ListCreateAPIView):
+    queryset = Gabinet.objects.all()
+    serializer_class = GabinetSerializer
+
+class GabinetDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Gabinet.objects.all()
+    serializer_class = GabinetSerializer
+
+class WizytaListCreateView(generics.ListCreateAPIView):
+    queryset = Wizyta.objects.all()
+    serializer_class = WizytaSerializer
+
+class WizytaDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Wizyta.objects.all()
+    serializer_class = WizytaSerializer
