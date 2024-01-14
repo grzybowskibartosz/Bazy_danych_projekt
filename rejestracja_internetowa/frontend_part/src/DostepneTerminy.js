@@ -26,9 +26,7 @@ const DostepneTerminy = () => {
   const [rok, setRok] = useState(selectedDate.getFullYear());
   const [miesiac, setMiesiac] = useState(selectedDate.getMonth() + 1);
   const [dzien, setDzien] = useState(selectedDate.getDate());
-  const [godzina, setGodzina] = useState(''); // Dodaj godzinę
-  const [minuta, setMinuta] = useState(''); // Dodaj minutę
-  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('authToken'));
+  const [isAuthenticated] = useState(!!localStorage.getItem('authToken'));
   const [openDialog, setOpenDialog] = useState(false);
 
   useEffect(() => {
@@ -127,7 +125,7 @@ const DostepneTerminy = () => {
                       <Typography variant="h5" component="div">
                         Data i godzina:
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography variant="body2" color="primary">
                         {termin.toLocaleString()}
                       </Typography>
                         <StyledButton variant="contained" onClick={() => handleReservationClick(termin)}>

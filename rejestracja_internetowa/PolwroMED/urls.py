@@ -36,6 +36,7 @@ urlpatterns = [
     path('api/wizyty/<int:lekarz_id>/lekarz/', wizyty_lekarza, name='wizyty_lekarza'),
 
     path('api/dostepne-terminy/<int:lekarz_id>/', dostepne_terminy, name='dostepne-terminy'),
+    path('api/dostepne-terminy/<int:lekarzId>/', dostepne_terminy, name='dostepne-terminy'),
 
     path('api/lekarze/<int:lekarz_id>/gabinety/', GabinetyLekarzaView.as_view(), name='gabinety-lekarza'),
 

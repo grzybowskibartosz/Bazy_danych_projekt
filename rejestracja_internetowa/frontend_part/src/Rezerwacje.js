@@ -1,153 +1,210 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
+
+import NavigationBar from './NavigationBar'
+
+
+import {Typography, Button, styled, Dialog, DialogActions,
+        DialogContent, DialogContentText, DialogTitle, Paper, Container, TextField} from '@material-ui/core';
+
+const CenteredContainer = styled('div')({
+  display: 'flex',
+  justifyContent: 'center',
+});
+
+const StyledPaper = styled(Paper)({
+  padding: '20px',
+  marginTop: '20px',
+});
+
+const StyledTypography = styled(Typography)({
+  marginBottom: '10px',
+  textAlign: 'center',
+});
+
+const StyledTypography2 = styled(Typography)({
+  marginBottom: '5px',
+  marginLeft: '350px'
+});
+
+
+const StyledButton = styled(Button)({
+  backgroundColor: '#26a197',
+  color: '#fff', // Text color
+  transition: 'transform 0.3s ease', // Smooth transition on hover
+  '&:hover': {
+    transform: 'scale(1.05)', // Slightly enlarge on hover
+    backgroundColor: '#26a197', // Keep the background color unchanged on hover
+    }
+});
 
 const Rezerwacje = () => {
-  const [pacjent, setPacjent] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [userInfo, setUserInfo] = useState({});
-  const [lekarz, setLekarz] = useState({});
-  const [gabinet, setGabinet] = useState({});
-  const [opisDolegliwosci, setOpisDolegliwosci] = useState(''); // Dodane pole opisu dolegliwości
-  const { lekarzId, rok, miesiac, dzien, godzina, minuta } = useParams();
+	const [pacjent, setPacjent] = useState({});
+	const [rezerwacjaZrealizowana, setRezerwacjaZrealizowana] = useState(false);
+	const [loading, setLoading] = useState(true);
+	const [lekarz, setLekarz] = useState({});
+	const [gabinet, setGabinet] = useState({});
+	const [opisDolegliwosci, setOpisDolegliwosci] = useState('');
+	const [error, setError] = useState('');
+	const [errorTermin, setErrorTermin] = useState('');
+	const [zajeteTerminy, setZajeteTerminy] = useState([]);
+	const { lekarzId, rok, miesiac, dzien, godzina, minuta } = useParams();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const authToken = localStorage.getItem('authToken');
+	useEffect(() => {
+		const fetchData = async () => {
+			try {
+				const authToken = localStorage.getItem('authToken');
 
-        if (authToken) {
-          // Pobierz informacje o użytkowniku na podstawie tokena
-          const response = await axios.get('http://localhost:8000/api/get_user_info/', {
-            headers: {
-              Authorization: `Token ${authToken}`,
-            },
-          });
-          const userInfo = response.data;
+				if (authToken) {
+					const response = await axios.get('http://localhost:8000/api/get_user_info/', {
+						headers: {
+							Authorization: `Token ${authToken}`,
+						},
+					});
 
-          // Ustaw dane pacjenta
-          setPacjent(userInfo.user_data);
+					setPacjent(response.data.user_data);
 
-          // Ustaw dane lekarza na podstawie parametru lekarzId
-          const lekarzResponse = await axios.get(`http://localhost:8000/api/lekarze/${lekarzId}/`);
-          setLekarz(lekarzResponse.data);
+					const lekarzResponse = await axios.get(`http://localhost:8000/api/lekarze/${lekarzId}/`);
+					setLekarz(lekarzResponse.data);
 
-           const gabinetResponse = await axios.get(`http://localhost:8000/api/lekarze/${lekarzId}/gabinety/`);
-           console.log('Dane gabinetu z backendu:', gabinetResponse.data);
-           setGabinet(gabinetResponse.data);
+					const gabinetResponse = await axios.get(`http://localhost:8000/api/lekarze/${lekarzId}/gabinety/`);
+					console.log('Dane gabinetu z backendu:', gabinetResponse.data);
+					setGabinet(gabinetResponse.data);
 
-          // Zakończ ładowanie
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error('Błąd pobierania informacji o użytkowniku:', error);
-      }
-    };
+					setLoading(false);
+				}
+			} catch (error) {
+				console.error('Błąd pobierania informacji o użytkowniku:', error);
+			}
+		};
 
+		fetchData();
+	}, [lekarzId]);
 
+	const handleOpisChange = (event) => {
+		setOpisDolegliwosci(event.target.value);
+	};
 
-    fetchData();
-  }, [lekarzId]);
+	const handleRezerwacjaClick = async () => {
+		try {
+			const authToken = localStorage.getItem('authToken');
 
-    const handleOpisChange = (event) => {
-    setOpisDolegliwosci(event.target.value);
-  };
+      const terminDoRezerwacji = new Date(`${rok}-${miesiac}-${dzien} ${godzina}:${minuta}`)
 
-  const handleRezerwacjaClick = async () => {
-    if (!rok || !miesiac || !dzien || !godzina || !minuta || !lekarzId || !pacjent.id || !opisDolegliwosci) {
-    console.error('Wszystkie pola muszą być uzupełnione');
-    console.log(gabinet.gabinety[0]);
-    console.log(rok, miesiac, dzien, godzina, minuta, lekarzId, pacjent.id, opisDolegliwosci, 1);
-    return;
-    }
-    try {
-      const authToken = localStorage.getItem('authToken');
+			const zajeteTerminyResponse = await axios.get(`http://localhost:8000/api/zajete-terminy-nowy/${lekarzId}/${rok}/${miesiac}/${dzien}/`);
+		  const zajeteTerminy = zajeteTerminyResponse.data.zajete_terminy;
+      const terminZajety = zajeteTerminy.some((zajetyTermin) => {
+        const dataZajeta = new Date(zajetyTermin);
+        console.log('Zajety termin:', dataZajeta);
+        console.log('Rezerwowany termin:', terminDoRezerwacji);
+        return dataZajeta.getTime() === terminDoRezerwacji.getTime();
+      });
 
-      if (authToken) {
-        const gabinetId = gabinet.gabinety[0].id;
-        const gabinetIds = [gabinetId]
-        console.log(gabinet.gabinety[0].id);
+      console.log(terminZajety);
 
-        await axios.post('http://localhost:8000/api/rezerwacje/', {
-          data_i_godzina: `${rok}-${miesiac}-${dzien} ${godzina}:${minuta}:00`,
-          lekarz_id: lekarzId,
-          pacjent_id: pacjent.id,
-          opis: opisDolegliwosci,
-          gabinet_id: gabinetId,
-        },{
-          headers: {
-            Authorization: `Token ${authToken}`,
-          },
-        });
+      if (!terminZajety) {
+          if (authToken) {
+            const gabinetId = gabinet.gabinety[0].id;
 
-        // Przekieruj na stronę potwierdzenia rezerwacji lub inny widok
-        // window.location.href = '/potwierdzenie-rezerwacji'; // Dodaj odpowiednią ścieżkę
-      }
-    } catch (error) {
-      console.error('Błąd rezerwacji wizyty:', error);
-    }
-  };
+            await axios.post('http://localhost:8000/api/rezerwacje/', {
+              data_i_godzina: `${rok}-${miesiac}-${dzien} ${godzina-1}:${minuta}:00`,
+              lekarz_id: lekarzId,
+              pacjent_id: pacjent.id,
+              opis: opisDolegliwosci,
+              gabinet_id: gabinetId,
+            }, {
+              headers: {
+                Authorization: `Token ${authToken}`,
+              },
+            });
 
+            setRezerwacjaZrealizowana(true);
+          }}else{
+          setErrorTermin('Termin jest już zarezerwowany');
+          }
+		} catch (error) {
+			console.error('Błąd rezerwacji wizyty:', error);
+			setError('Wypełnij pole')
+		}
+	};
 
-  if (loading) {
-    return <p>Ładowanie danych...</p>;
-  }
+	if (loading) {
+		return <p>Ładowanie danych...</p>;
+	}
 
-  return (
+	 return (
     <>
-      {pacjent && lekarz && (
-        <>
-          <h1>Rezerwacja wizyty</h1>
-          <h1>Informacje o pacjencie:</h1>
-          <p>Imię: {pacjent.imie}</p>
-          <p>Nazwisko: {pacjent.nazwisko}</p>
-          <p>Data urodzenia: {pacjent.data_urodzenia}</p>
-          <p>Adres zamieszkania: {pacjent.adres}</p>
-          <p>PESEL: {pacjent.pesel}</p>
-          <p>Inne informacje: {pacjent.inne_informacje}</p>
+      <NavigationBar />
+      <Container maxWidth="md">
+        <StyledPaper elevation={3}>
+          <StyledTypography variant="h4">Rezerwacja wizyty</StyledTypography>
 
-          <h1>Informacje o wybranym lekarzu:</h1>
-          <p>Imię lekarza: {lekarz.imie}</p>
-          <p>Nazwisko lekarza: {lekarz.nazwisko}</p>
-          <p>Specjalizacja: {lekarz.specjalizacja}</p>
-          <p>Gabinet: {gabinet.gabinety[0].numer_gabinetu}</p>
-          {gabinet.gabinety.length > 0 ? (
-  <>
-    <h1>Informacje o gabinetach lekarza:</h1>
-    <ul>
-      {gabinet.gabinety.map((gabinetInfo) => (
-        <li key={gabinetInfo.id}>
-          Numer gabinetu: {gabinetInfo.numer_gabinetu}
-          <br />
-          Specjalizacja: {gabinetInfo.specjalizacja}
-          <br />
-          Opis gabinetu: {gabinetInfo.opis_gabinetu}
-          <br />
-          Status dostępności: {gabinetInfo.status_dostepnosci ? 'Dostępny' : 'Niedostępny'}
-          <br />
-          {/* Dodaj więcej pól, jeśli są dostępne */}
-        </li>
-      ))}
-    </ul>
-  </>
-) : (
-  <p>Brak dostępnych gabinetów.</p>
-)}
+          <StyledTypography variant="h6">Informacje o pacjencie:</StyledTypography>
+          <StyledTypography2>Imię i nazwisko: {pacjent.imie} {pacjent.nazwisko}</StyledTypography2>
+          <StyledTypography2>Data urodzenia: {pacjent.data_urodzenia}</StyledTypography2>
+          <StyledTypography2>Adres zamieszkania: {pacjent.adres}</StyledTypography2>
+          <StyledTypography2>PESEL: {pacjent.pesel}</StyledTypography2>
+          <StyledTypography2>Inne informacje: {pacjent.inne_informacje}</StyledTypography2>
 
-          <h1>Wybrany termin rezerwacji:</h1>
-          <p>Data: {rok}-{miesiac}-{dzien}</p>
-          <p>Godzina: {godzina}:{minuta}</p>
+          <StyledTypography variant="h6">Informacje o wybranym lekarzu:</StyledTypography>
+          <StyledTypography2>Imię i nazwisko: {lekarz.imie} {lekarz.nazwisko}</StyledTypography2>
+          <StyledTypography2>Specjalizacja: {lekarz.specjalizacja}</StyledTypography2>
+          <StyledTypography2>Gabinet: {gabinet.gabinety[0].numer_gabinetu}</StyledTypography2>
 
-          <textarea
-            rows="4"
-            cols="50"
-            placeholder="Opis dolegliwości"
+          <StyledTypography variant="h6">Wybrany termin wizyty:</StyledTypography>
+          <StyledTypography2>Data: {dzien}.{miesiac}.{rok}</StyledTypography2>
+          <StyledTypography2>Godzina: {godzina}:{minuta}</StyledTypography2>
+
+          <TextField
+            multiline
+            minRows={4}
+            fullWidth
+            placeholder="Opisz swoją dolegliwość"
             value={opisDolegliwosci}
             onChange={handleOpisChange}
+            margin="normal"
+            errror={!!error}
+            helperText={error}
+            FormHelperTextProps= {{style: {color: '#ff0000'}}}
           />
-          <button onClick={handleRezerwacjaClick}>Zarezerwuj wizytę</button>
-        </>
-      )}
+          <CenteredContainer>
+              <StyledButton
+                variant="contained"
+                color="primary"
+                onClick={handleRezerwacjaClick}
+              >
+                Zarezerwuj wizytę
+              </StyledButton>
+          </CenteredContainer>
+          <Dialog open={rezerwacjaZrealizowana}>
+            <DialogTitle>Rezerwacja zrealizowana</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                Wizyta została pomyślnie zarezerwowana!
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button  component={Link} to="/login">
+                OK
+              </Button>
+            </DialogActions>
+          </Dialog>
+        <Dialog open={errorTermin}>
+            <DialogTitle>Błąd rezerwacji</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                Wizyta została już wcześniej zarezerwowana!
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button  component={Link} to="/login">
+                OK
+              </Button>
+            </DialogActions>
+          </Dialog>
+        </StyledPaper>
+      </Container>
     </>
   );
 };

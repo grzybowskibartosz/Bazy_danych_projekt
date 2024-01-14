@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import AppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
@@ -11,32 +9,8 @@ import { Link } from 'react-router-dom';
 import NavigationBar from './NavigationBar';
 import Pacjent from './PatientPanel';
 import Lekarz from './DoctorPanel';
-import logo from './logo.png';
 
-const StyledAppBar = styled(AppBar)({
-  backgroundColor: '#26a197',
-});
 
-const StyledToolbar = styled(Toolbar)({
-  display: 'flex',
-  justifyContent: 'space-between',
-});
-
-const StyledButtonsContainer = styled('div')({
-  display: 'flex',
-  gap: '10px',
-  marginLeft: 'auto',
-});
-
-const StyledCenteredColumn = styled('div')({
-  backgroundColor: '#e0e0e0',
-  width: '50%',
-  margin: '0 auto',
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  height: '100vh',
-});
 
 const StyledFormContainer = styled('div')({
   width: '50%',
@@ -55,10 +29,6 @@ const StyledButton = styled(Button)({
   backgroundColor: '#26a197',
 });
 
-const StyledLogo = styled('img')({
-  height: '70px',
-  margin: '10px 0',
-});
 
 const Login = () => {
   const [loginData, setLoginData] = useState({
@@ -66,7 +36,7 @@ const Login = () => {
     password: '',
   });
   const [loggedIn, setLoggedIn] = useState(false);
-  const [loginError, setLoginError] = useState('');
+  const [loginError] = useState('');
   const [userInfo, setUserInfo] = useState({});
 
   const handleInputChange = (e) => {
@@ -116,19 +86,16 @@ const Login = () => {
     const authToken = localStorage.getItem('authToken');
     console.log('Pobrany token:', authToken);
 
-    const response = await axios.post('http://localhost:8000/api/logout/', null, {
+    await axios.post('http://localhost:8000/api/logout/', null, {
       headers: {
         Authorization: `Token ${authToken}`,
       },
     });
 
-    // Pomyślne wylogowanie - usuń token z pamięci lokalnej
     localStorage.removeItem('authToken');
 
     window.location.reload();
 
-
-    // Przekierowanie lub aktualizacja interfejsu użytkownika
   } catch (error) {
     // Obsługa błędów, np. brak autoryzacji
     console.error('Error during logout:', error);
