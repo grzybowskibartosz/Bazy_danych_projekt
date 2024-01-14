@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
+import 'react-calendar/dist/Calendar.css';
 import axios from 'axios';
 import { useParams, Link } from 'react-router-dom';
 
 import NavigationBar from './NavigationBar'
 import {Typography, Box, Grid, CardContent, Card, Button, styled, Dialog, DialogActions,
-        DialogContent, DialogContentText, DialogTitle} from '@material-ui/core';
+        DialogContent, DialogContentText, DialogTitle, makeStyles} from '@material-ui/core';
 
 const StyledButton = styled(Button)({
   marginTop: '16px',
@@ -18,7 +19,27 @@ const StyledButton = styled(Button)({
   },
 });
 
+const useStyles = makeStyles((theme) => ({
+  container: {
+    marginLeft: theme.spacing(50),
+    marginRight: theme.spacing(50),
+  },
+  card: {
+    height: '100%',
+  },
+
+  calendar:{
+    maxWidth: '800px',
+    margin: 'auto',
+    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+    borderRadius: '8px',
+    fontFamily: 'YourPreferredFont, sans-serif',
+  }
+
+}));
+
 const DostepneTerminy = () => {
+  const classes = useStyles();
   const { lekarzId } = useParams();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [dostepneTerminy, setDostepneTerminy] = useState([]);
@@ -42,6 +63,7 @@ const DostepneTerminy = () => {
           const dostepneTerminy = wszystkieTerminy.filter(termin => !czyTerminJestZajety(termin, zajeteTerminy));
 
           setDostepneTerminy(dostepneTerminy);
+          console.log(dostepneTerminy.toLocaleString());
 
         })
         .catch(error => console.error('Błąd pobierania informacji o godzinach pracy lekarza:', error));
@@ -92,28 +114,64 @@ const DostepneTerminy = () => {
     const endHour = parseInt(godzinyPracy.koniec.split(':')[0], 10);
     const intervalMinutes = 20;
 
-    for (let hour = startHour; hour < endHour; hour++) {
-      for (let minute = 0; minute < 60; minute += intervalMinutes) {
-        const termin = new Date(selectedDate);
-        termin.setHours(hour);
-        termin.setMinutes(minute);
-        terminy.push(termin);
-      }
+    const currentHour = new Date().getHours();
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth()+1;
+    const currentDayOfMonth = new Date().getDate();
+
+    console.log(currentYear, currentMonth, currentDayOfMonth)
+
+  let hourToStart = startHour;
+  console.log(hourToStart)
+
+    if (currentMonth === selectedDate.getMonth() + 1 && currentYear === selectedDate.getFullYear() && currentDayOfMonth === selectedDate.getDate()) {
+        // Jeśli godzina pracystart jest większa niż aktualna godzina, zaczynamy od tej godziny
+        if (startHour > currentHour) {
+        hourToStart = startHour;
+        } else {
+        // W przeciwnym razie zaczynamy od aktualnej godziny zaokrąglonej w górę do najbliższej pełnej godziny
+        hourToStart = (currentHour+1);
+        console.log(hourToStart);
+        }
+
+        for (let hour = hourToStart; hour < endHour; hour++) {
+            for (let minute = 0; minute < 60; minute += intervalMinutes) {
+              const termin = new Date(selectedDate);
+              termin.setHours(hour);
+              termin.setMinutes(minute);
+              terminy.push(termin);
+            }
+        }
+    } else {
+        hourToStart =startHour;
+        for (let hour = hourToStart; hour < endHour; hour++) {
+            for (let minute = 0; minute < 60; minute += intervalMinutes) {
+            const termin = new Date(selectedDate);
+            termin.setHours(hour);
+            termin.setMinutes(minute);
+            terminy.push(termin);
+            }
+        }
     }
 
-    return terminy;
-  };
+  return terminy;
+};
 
   const czyTerminJestZajety = (termin, zajeteTerminy) => {
     return zajeteTerminy.some(zajetyTermin => zajetyTermin.getTime() === termin.getTime());
   };
 
+
   return (
     <div>
       <NavigationBar />
-      <Box ml={40} mr={40} mt={12}>
+      <Box ml={40} mr={40} mt={12} className = {classes.container}>
         <h1>Dostępne terminy</h1>
-        <Calendar onChange={handleDateChange} value={selectedDate} />
+        <Calendar
+         onChange={handleDateChange}
+         value={selectedDate}
+         minDate={new Date()}
+         className={classes.calendar}/>
         {dostepneTerminy.length > 0 ? (
           <div>
             <h2>Dostępne terminy na {selectedDate.toLocaleDateString()}</h2>
@@ -126,7 +184,7 @@ const DostepneTerminy = () => {
                         Data i godzina:
                       </Typography>
                       <Typography variant="body2" color="primary">
-                        {termin.toLocaleString()}
+                        {termin.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}:00
                       </Typography>
                         <StyledButton variant="contained" onClick={() => handleReservationClick(termin)}>
                         Rezerwacja
