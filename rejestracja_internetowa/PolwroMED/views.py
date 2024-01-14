@@ -18,15 +18,63 @@ from rest_framework.response import Response
 from rest_framework.views import APIView, View
 from .models import Pacjent, Lekarz, Gabinet, Wizyta
 from .serializers import GabinetSerializer, UserSerializer, PacjentSerializer, LekarzSerializer, WizytaSerializer
+from django.shortcuts import get_object_or_404
+import json
 
 User = get_user_model()
 
-@csrf_exempt
-def rezerwacja_view(request):
+class GabinetyLekarzaView(APIView):
+    def get(self, request, lekarz_id):
+        lekarz = get_object_or_404(Lekarz, id=lekarz_id)
+        gabinety = lekarz.gabinety.all()  # Użyj odniesienia do ManyToManyField
 
-    return
+        if gabinety:
+            serializer = GabinetSerializer(gabinety, many=True)
+
+            # Wypisz informacje na konsoli
+            print("Informacje o gabinetach lekarza:")
+            for gabinet_data in serializer.data:
+                print(f"Numer gabinetu: {gabinet_data['numer_gabinetu']}")
+
+            return Response({'gabinety': serializer.data}, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'Lekarz nie jest przypisany do żadnego gabinetu.'},
+                            status=status.HTTP_404_NOT_FOUND)
+class RezerwacjaView(APIView):
+    @authentication_classes([TokenAuthentication])
+    @permission_classes([IsAuthenticated])
+    @csrf_exempt
+    def post(self, request, *args, **kwargs):
+        try:
+            data = request.data
+
+            wizyta_data = {
+                'data_i_godzina': data['data_i_godzina'],
+                'lekarz': data['lekarz_id'],
+                'pacjent': data['pacjent_id'],
+                'opis': data['opis'],
+                'gabinet': data['gabinet_id'],
+                'status': 'zaplanowana',
+            }
+
+            wizyta_serializer = WizytaSerializer(data=wizyta_data)
+
+            if wizyta_serializer.is_valid():
+                wizyta_serializer.save()
+                return Response(wizyta_serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                print("Validation errors:", wizyta_serializer.errors)  # Dodano wypisanie błędów walidacji
+                return Response(wizyta_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            print("Exception:", str(e))
+            return Response({'error': 'Internal Server Error'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+def dostepne_terminy(request, lekarz_id):
+    lekarz = get_object_or_404(Lekarz, id=lekarz_id)
+    serializer = LekarzSerializer(lekarz)
+    return JsonResponse(serializer.data)
 
 class RejestracjaView(APIView):
     def post(self, request, *args, **kwargs):

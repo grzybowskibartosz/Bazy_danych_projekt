@@ -1,8 +1,8 @@
 from django.urls import path
 from .views import PacjentListCreateView, PacjentDetailView, LekarzListCreateView, LekarzDetailView, WizytaListCreateView,      \
                    WizytaDetailView, GabinetListCreateView, GabinetDetailView, RejestracjaView, LoginView, UserInfoView,        \
-                   moje_wizyty, wizyty_lekarza, wizyty_pacjenta, zmien_status_wizyty, NasiLekarzeView, log_out_view,              \
-                   zajete_terminy_na_dzien, rezerwacja_view
+                   moje_wizyty, wizyty_lekarza, wizyty_pacjenta, zmien_status_wizyty, NasiLekarzeView, log_out_view,            \
+                   zajete_terminy_na_dzien, RezerwacjaView, dostepne_terminy, GabinetyLekarzaView
 
 urlpatterns = [
 
@@ -27,13 +27,17 @@ urlpatterns = [
     path('api/login/', LoginView.as_view(), name='login'),
     path('api/logout/', log_out_view, name='logout'),
 
-    path('api/rezerwacje/', rezerwacja_view, name='rezerwacje'),
+    path('api/rezerwacje/', RezerwacjaView.as_view(), name='rezerwacje'),
 
     path('api/get_user_info/', UserInfoView.as_view(), name='get_user_info'),
 
     path('api/moje-wizyty/', moje_wizyty, name='moje_wizyty'),
 
     path('api/wizyty/<int:lekarz_id>/lekarz/', wizyty_lekarza, name='wizyty_lekarza'),
+
+    path('api/dostepne-terminy/<int:lekarz_id>/', dostepne_terminy, name='dostepne-terminy'),
+
+    path('api/lekarze/<int:lekarz_id>/gabinety/', GabinetyLekarzaView.as_view(), name='gabinety-lekarza'),
 
     path('api/wizyty/<int:pacjent_id>/pacjent/', wizyty_pacjenta, name='wizyty_pacjenta'),
 

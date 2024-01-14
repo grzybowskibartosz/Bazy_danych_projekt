@@ -54,7 +54,23 @@ const Rejestracja = () => {
       .then((response) => {
         console.log('Pacjent zarejestrowany:', response.data);
         // Przekieruj użytkownika na stronę logowania lub potwierdzenia rejestracji
-        setEtapRejestracji(2);
+
+        const selectedAppointment = localStorage.getItem('selectedAppointment');
+
+        if (selectedAppointment) {
+          const {
+            lekarzId,
+            rok,
+            miesiac,
+            dzien,
+            godzina,
+            minuta,
+          } = JSON.parse(selectedAppointment);
+          window.location.href = `/login`;
+
+        } else {
+          setEtapRejestracji(2);
+        }
       })
       .catch((error) => {
         console.error('Błąd rejestracji pacjenta:', error);

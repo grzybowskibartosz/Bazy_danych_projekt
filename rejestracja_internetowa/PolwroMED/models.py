@@ -83,7 +83,7 @@ class Wizyta(models.Model):
         # Dodaj inne statusy według potrzeb
     ]
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='wolna')
-    gabinet = models.ForeignKey(Gabinet, on_delete=models.CASCADE)
+    gabinet = models.ForeignKey(Gabinet, on_delete=models.CASCADE, blank=True, null=True)
     diagnoza = models.TextField(blank=True)
     przepisane_leki = models.TextField(blank=True)
     notatki_lekarza = models.TextField(blank=True)

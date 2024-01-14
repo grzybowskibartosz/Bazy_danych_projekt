@@ -5,7 +5,8 @@ import Rejestracja from './Rejestracja';
 import Login from './Login';
 import NasiLekarze from './NasiLekarze';
 import DostepneTerminy from './DostepneTerminy';
-import MojeWizyty from './MojeWizyty'; // Dodaj nowy komponent dla MojeWizyty
+import MojeWizyty from './MojeWizyty';
+import Rezerwacje from './Rezerwacje';
 
 function App() {
   return (
@@ -16,7 +17,9 @@ function App() {
         <Route path="/Login" element={<Login />} />
         <Route path="/nasi-lekarze" element={<NasiLekarze />} />
         <Route path="/dostepne-terminy/:lekarzId" element={<DostepneTerminy />} />
-        <Route path="/api/moje-wizyty" element={<MojeWizyty />} /> {/* Dodaj nową trasę dla MojeWizyty */}
+        <Route path="/api/moje-wizyty" element={<MojeWizyty />} />
+        <Route path="/rezerwacje/:lekarzId/:rok/:miesiac/:dzien/:godzina/:minuta" element={<Rezerwacje />} />
+
       </Routes>
     </Router>
   );

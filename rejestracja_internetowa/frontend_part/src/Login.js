@@ -84,15 +84,27 @@ const Login = () => {
 
       localStorage.setItem('authToken', token);
 
-      console.log('Zalogowano:', token);
+      const selectedAppointment = localStorage.getItem('selectedAppointment');
 
       setLoggedIn(true);
 
-      getUserInfo();
+      if (selectedAppointment) {
+        const {
+            lekarzId,
+            rok,
+            miesiac,
+            dzien,
+            godzina,
+            minuta,
+        } = JSON.parse(selectedAppointment);
 
-      window.location.reload();
+        window.location.href = `/rezerwacje/${lekarzId}/${rok}/${miesiac}/${dzien}/${godzina}/${minuta}`;
 
-
+        localStorage.removeItem('selectedAppointment');
+      } else {
+        getUserInfo();
+        window.location.reload();
+      }
     } catch (error) {
       console.error('Błąd logowania:', error);
       setLoggedIn(false);

@@ -28,6 +28,8 @@ class GabinetSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class WizytaSerializer(serializers.ModelSerializer):
+
+    gabinet = serializers.PrimaryKeyRelatedField(queryset=Gabinet.objects.all())
     class Meta:
         model = Wizyta
         fields = '__all__'

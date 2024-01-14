@@ -26,6 +26,8 @@ const DostepneTerminy = () => {
   const [rok, setRok] = useState(selectedDate.getFullYear());
   const [miesiac, setMiesiac] = useState(selectedDate.getMonth() + 1);
   const [dzien, setDzien] = useState(selectedDate.getDate());
+  const [godzina, setGodzina] = useState(''); // Dodaj godzinę
+  const [minuta, setMinuta] = useState(''); // Dodaj minutę
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('authToken'));
   const [openDialog, setOpenDialog] = useState(false);
 
@@ -56,14 +58,29 @@ const DostepneTerminy = () => {
 
   };
 
-  const handleReservationClick = () => {
+  const handleReservationClick = (termin) => {
     if (isAuthenticated) {
+
+      const wybranaGodzina = termin.getHours().toString().padStart(2, '0');
+      const wybraneMinuty =  termin.getMinutes().toString().padStart(2, '0');
+
       // Przekieruj do podstrony rezerwacji
-      // Możesz także przekazać dodatkowe informacje, takie jak wybrana data
-      window.location.href = '/rezerwacje';
+      window.location.href = `/rezerwacje/${lekarzId}/${rok}/${miesiac}/${dzien}/${wybranaGodzina}/${wybraneMinuty}`;
     } else {
+      const wybranaGodzina = termin.getHours().toString().padStart(2, '0');
+      const wybraneMinuty =  termin.getMinutes().toString().padStart(2, '0');
+
       // Wyświetl okno dialogowe
       setOpenDialog(true);
+      // Zapisz informacje o wybranym terminie w localStorage
+      localStorage.setItem('selectedAppointment', JSON.stringify({
+        lekarzId,
+        rok,
+        miesiac,
+        dzien,
+        godzina: wybranaGodzina,
+        minuta: wybraneMinuty,
+      }));
     }
   };
 
@@ -113,7 +130,7 @@ const DostepneTerminy = () => {
                       <Typography variant="body2" color="text.secondary">
                         {termin.toLocaleString()}
                       </Typography>
-                      <StyledButton variant="contained" onClick={handleReservationClick}>
+                        <StyledButton variant="contained" onClick={() => handleReservationClick(termin)}>
                         Rezerwacja
                       </StyledButton>
                     </CardContent>
