@@ -1,25 +1,21 @@
-from django.contrib.auth import get_user_model, authenticate, login, logout
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth import authenticate, login
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, authenticate, login
+from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from django.views.decorators.http import require_GET, require_http_methods
-from rest_framework import generics, status
-from django.views.decorators.http import require_GET, require_POST
+from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET
 from rest_framework import generics
 from rest_framework import status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
-from rest_framework.decorators import authentication_classes, permission_classes, api_view
+from rest_framework.decorators import authentication_classes, permission_classes
 from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView, View
+
 from .models import Pacjent, Lekarz, Gabinet, Wizyta
 from .serializers import GabinetSerializer, UserSerializer, PacjentSerializer, LekarzSerializer, WizytaSerializer
-from django.shortcuts import get_object_or_404
-import json
 
 User = get_user_model()
 
@@ -136,6 +132,8 @@ def log_out_view(request):
         return JsonResponse({'message': 'Wylogowano pomyślnie'})
     else:
         return JsonResponse({'error': 'Invalid request method'})
+
+
 class IsPatientOrDoctor(BasePermission):
     def has_permission(self, request, view):
         user = request.user
@@ -169,6 +167,7 @@ class UserInfoView(APIView):
         return response
 
 
+@csrf_exempt
 @login_required
 @require_GET
 def moje_wizyty(request):
@@ -182,6 +181,7 @@ def moje_wizyty(request):
             'id': wizyta.id,
             'opis': wizyta.opis,
             'data_i_godzina': wizyta.data_i_godzina.isoformat(),
+            'status': wizyta.status,
         }
         for wizyta in moje_wizyty
     ]
@@ -200,6 +200,7 @@ def wizyty_lekarza(request, lekarz_id):
                 'imie': wizyta.pacjent.imie,
                 'nazwisko': wizyta.pacjent.nazwisko,
             },
+            'opis': wizyta.opis,
             'gabinet': wizyta.gabinet.numer_gabinetu,
             'status': wizyta.status,
             # Dodaj więcej informacji o wizycie, jeśli to konieczne
@@ -216,6 +217,7 @@ def wizyty_lekarza(request, lekarz_id):
                 'nazwisko': wizyta.pacjent.nazwisko,
             },
             'gabinet': wizyta.gabinet.numer_gabinetu,
+            'opis': wizyta.opis,
             'diagnoza': wizyta.diagnoza,
             'przepisane_leki': wizyta.przepisane_leki,
             'notatki_lekarza': wizyta.notatki_lekarza,
@@ -231,74 +233,6 @@ def wizyty_lekarza(request, lekarz_id):
     }
 
     return JsonResponse(response_data, safe=False)
-
-def wizyty_pacjenta(request, pacjent_id):
-    wizyty_zaplanowane = Wizyta.objects.filter(pacjent__id=pacjent_id, status='Zaplanowana')
-    wizyty_odbyte = Wizyta.objects.filter(pacjent__id=pacjent_id, status='Odbyta')
-
-    wizyty_zaplanowane_data = [
-        {
-            'id': wizyta.id,
-            'data_i_godzina': wizyta.data_i_godzina,
-            'lekarz': {
-                'imie': wizyta.lekarz.imie,
-                'nazwisko': wizyta.lekarz.nazwisko,
-                'specjalizacja': wizyta.lekarz.specjalizacja,
-
-            },
-            'gabinet': wizyta.gabinet.numer_gabinetu,
-            # Dodaj więcej informacji o wizycie, jeśli to konieczne
-        }
-        for wizyta in wizyty_zaplanowane
-    ]
-
-    wizyty_odbyte_data = [
-        {
-            'id': wizyta.id,
-            'data_i_godzina': wizyta.data_i_godzina,
-            'lekarz': {
-                'imie': wizyta.lekarz.imie,
-                'nazwisko': wizyta.lekarz.nazwisko,
-                'specjalizacja': wizyta.lekarz.specjalizacja,
-
-            },
-            'gabinet': wizyta.gabinet.numer_gabinetu,
-            'diagnoza': wizyta.diagnoza,
-            'przepisane_leki': wizyta.przepisane_leki,
-            'notatki_lekarza': wizyta.notatki_lekarza,
-            # Dodaj więcej informacji o wizycie, jeśli to konieczne
-        }
-        for wizyta in wizyty_odbyte
-    ]
-
-    response_data = {
-        'zaplanowane': wizyty_zaplanowane_data,
-        'odbyte': wizyty_odbyte_data,
-    }
-
-    return JsonResponse(response_data, safe=False)
-
-@require_POST
-@login_required
-def zmien_status_wizyty(request, wizyta_id):
-    try:
-        wizyta = Wizyta.objects.get(pk=wizyta_id)
-    except Wizyta.DoesNotExist:
-        return JsonResponse({'error': 'Wizyta o podanym ID nie istnieje'}, status=404)
-
-    if wizyta.lekarz.user != request.user:
-        return JsonResponse({'error': 'Nie masz uprawnień do zmiany statusu tej wizyty'}, status=403)
-
-    nowy_status = request.POST.get('status')
-    if nowy_status not in ['Zaplanowana', 'Odbyta']:
-        return JsonResponse({'error': 'Nieprawidłowy status wizyty'}, status=400)
-
-    wizyta.status = nowy_status
-    wizyta.save()
-
-    return JsonResponse({'success': True})
-
-
 
 class NasiLekarzeView(APIView):
     def get(self, request, *args, **kwargs):
@@ -331,8 +265,180 @@ def zajete_terminy_na_dzien(request, lekarz_id, rok, miesiac, dzien):
         },
     })
 
+def wizyty_pacjenta(request, pacjent_id):
+    wizyty_zaplanowane = Wizyta.objects.filter(pacjent__id=pacjent_id, status='Zaplanowana')
+    wizyty_odbyte = Wizyta.objects.filter(pacjent__id=pacjent_id, status='Odbyta')
+    wizyty_anulowane = Wizyta.objects.filter(pacjent__id=pacjent_id, status='Anulowana')
+
+    wizyty_zaplanowane_data = [
+        {
+            'id': wizyta.id,
+            'data_i_godzina': wizyta.data_i_godzina,
+            'lekarz': {
+                'imie': wizyta.lekarz.imie,
+                'nazwisko': wizyta.lekarz.nazwisko,
+                'specjalizacja': wizyta.lekarz.specjalizacja,
+            },
+            'opis': wizyta.opis,
+            'gabinet': wizyta.gabinet.numer_gabinetu,
+            'status': wizyta.status,
+        }
+        for wizyta in wizyty_zaplanowane
+    ]
+
+    wizyty_odbyte_data = [
+        {
+            'id': wizyta.id,
+            'data_i_godzina': wizyta.data_i_godzina,
+            'lekarz': {
+                'imie': wizyta.lekarz.imie,
+                'nazwisko': wizyta.lekarz.nazwisko,
+                'specjalizacja': wizyta.lekarz.specjalizacja,
+            },
+            'gabinet': wizyta.gabinet.numer_gabinetu,
+            'opis': wizyta.opis,
+            'diagnoza': wizyta.diagnoza,
+            'przepisane_leki': wizyta.przepisane_leki,
+            'notatki_lekarza': wizyta.notatki_lekarza,
+            'status': wizyta.status,
+        }
+        for wizyta in wizyty_odbyte
+    ]
+
+    wizyty_anulowane_data = [
+        {
+            'id': wizyta.id,
+            'data_i_godzina': wizyta.data_i_godzina,
+            'lekarz': {
+                'imie': wizyta.lekarz.imie,
+                'nazwisko': wizyta.lekarz.nazwisko,
+                'specjalizacja': wizyta.lekarz.specjalizacja,
+            },
+            'gabinet': wizyta.gabinet.numer_gabinetu,
+            'opis': wizyta.opis,
+            'diagnoza': wizyta.diagnoza,
+            'przepisane_leki': wizyta.przepisane_leki,
+            'notatki_lekarza': wizyta.notatki_lekarza,
+            'status': wizyta.status,
+        }
+        for wizyta in wizyty_anulowane
+    ]
+
+    response_data = {
+        'zaplanowane': wizyty_zaplanowane_data,
+        'odbyte': wizyty_odbyte_data,
+        'anulowane': wizyty_anulowane_data,
+    }
+
+    return JsonResponse(response_data, safe=False)
+
+class AnulujWizyteView(APIView):
+    def put(self, request, wizyta_id):
+        try:
+            wizyta = Wizyta.objects.get(id=wizyta_id)
+
+            # Sprawdź, czy wizyta nie jest już anulowana lub odbyta
+            if wizyta.status in ['anulowana', 'odbyta']:
+                return Response({'status': 'Nie można anulować lub zmieniać statusu już anulowanej lub odbytej wizyty'},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+            # Zaktualizuj status wizyty na 'anulowana'
+            wizyta.status = 'anulowana'
+            wizyta.save()
+
+            return Response({'status': 'Wizyta anulowana'}, status=status.HTTP_200_OK)
+        except Wizyta.DoesNotExist:
+            return Response({'status': 'Wizyta nie istnieje'}, status=status.HTTP_404_NOT_FOUND)
+
+class CheckPeselView(View):
+    def get(self, request, pesel):
+        exists = Pacjent.objects.filter(pesel=pesel).exists()
+        return JsonResponse({'exists': exists})
+
+class EdytujOpisWizytyView(APIView):
+    def put(self, request, wizyta_id):
+        try:
+            wizyta = Wizyta.objects.get(id=wizyta_id)
+
+            # Sprawdź, czy wizyta nie jest już anulowana lub odbyta
+            if wizyta.status in ['anulowana', 'odbyta']:
+                return Response({'status': 'Nie można edytować już anulowanej lub odbytej wizyty'},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+            opis = request.data.get('opis', '')# Pobierz dane z edycji z danych przesłanych w żądaniu
 
 
+            # Zaktualizuj opis wizyty
+            wizyta.opis = opis
+
+            wizyta.save()
+
+            return Response({'status': 'Opis wizyty zaktualizowany'}, status=status.HTTP_200_OK)
+        except Wizyta.DoesNotExist:
+            return Response({'status': 'Wizyta nie istnieje'}, status=status.HTTP_404_NOT_FOUND)
+
+class ZmienStatusWizytyView(APIView):
+    def put(self, request, wizyta_id):
+        try:
+            wizyta = Wizyta.objects.get(id=wizyta_id)
+
+            # Sprawdź, czy wizyta nie jest już anulowana
+            if wizyta.status == 'anulowana':
+                return Response({'status': 'Nie można zmieniać statusu już anulowanej wizyty'},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+            # Zaktualizuj status wizyty
+            if wizyta.status == 'odbyta':
+                # Jeżeli status to 'Odbyta', zmień na 'Zaplanowana'
+                wizyta.status = 'zaplanowana'
+            else:
+                # W przeciwnym razie, zmień na 'Odbyta'
+                wizyta.status = 'odbyta'
+
+            wizyta.save()
+
+            return Response({'status': 'Status wizyty zmieniony'}, status=status.HTTP_200_OK)
+        except Wizyta.DoesNotExist:
+            return Response({'status': 'Wizyta nie istnieje'}, status=status.HTTP_404_NOT_FOUND)
+
+class EdytujPolaWizytyView(APIView):
+    def put(self, request, wizyta_id):
+        try:
+            wizyta = Wizyta.objects.get(pk=wizyta_id)
+            wizyta.diagnoza = request.data.get('diagnoza', wizyta.diagnoza)
+            wizyta.przepisane_leki = request.data.get('przepisane_leki', wizyta.przepisane_leki)
+            wizyta.notatki_lekarza = request.data.get('notatki_lekarza', wizyta.notatki_lekarza)
+            wizyta.save()
+            return Response({'message': 'Pola wizyty zaktualizowane pomyślnie.'})
+        except Wizyta.DoesNotExist:
+            return Response({'error': 'Wizyta nie istnieje.'}, status=status.HTTP_404_NOT_FOUND)
+
+class EdytujWizyteView(APIView):
+    def put(self, request, wizyta_id):
+        try:
+            wizyta = Wizyta.objects.get(id=wizyta_id)
+
+            # Sprawdź, czy lekarz ma dostęp do edycji wizyty
+            if not request.user.lekarz == wizyta.lekarz:
+                return Response({'status': 'Brak uprawnień do edycji tej wizyty'},
+                                status=status.HTTP_403_FORBIDDEN)
+
+            # Pobierz dane z żądania
+            diagnoza = request.data.get('diagnoza', '')
+            przepisane_leki = request.data.get('przepisane_leki', '')
+            notatki_lekarza = request.data.get('notatki_lekarza', '')
+
+            # Zaktualizuj pola wizyty
+            wizyta.diagnoza = diagnoza
+            wizyta.przepisane_leki = przepisane_leki
+            wizyta.notatki_lekarza = notatki_lekarza
+
+            wizyta.save()
+
+            # Zwróć potwierdzenie
+            return Response({'status': 'Wizyta zaktualizowana'}, status=status.HTTP_200_OK)
+        except Wizyta.DoesNotExist:
+            return Response({'status': 'Wizyta nie istnieje'}, status=status.HTTP_404_NOT_FOUND)
 
 class PacjentListCreateView(generics.ListCreateAPIView):
     queryset = Pacjent.objects.all()
@@ -365,3 +471,5 @@ class WizytaListCreateView(generics.ListCreateAPIView):
 class WizytaDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Wizyta.objects.all()
     serializer_class = WizytaSerializer
+
+

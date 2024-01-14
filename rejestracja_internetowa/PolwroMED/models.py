@@ -152,6 +152,12 @@ class Wizyta(models.Model):
             if kolidujace_wizyty_pacjent.exists():
                 raise ValidationError('Pacjent ma już zaplanowaną inną wizytę w tym samym czasie.')
 
+    def save(self, *args, **kwargs):
+        self.full_clean()  # Wywołanie metody clean przed zapisem
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f'Wizyta u {self.lekarz} przez {self.pacjent} dnia {self.data_i_godzina} w gabinecie {self.gabinet.numer_gabinetu}'
 
     def save(self, *args, **kwargs):
         self.full_clean()  # Wywołanie metody clean przed zapisem

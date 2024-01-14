@@ -1,11 +1,12 @@
 from django.urls import path
-from .views import PacjentListCreateView, PacjentDetailView, LekarzListCreateView, LekarzDetailView, WizytaListCreateView,      \
-                   WizytaDetailView, GabinetListCreateView, GabinetDetailView, RejestracjaView, LoginView, UserInfoView,        \
-                   moje_wizyty, wizyty_lekarza, wizyty_pacjenta, zmien_status_wizyty, NasiLekarzeView, log_out_view,            \
-                   zajete_terminy_na_dzien, RezerwacjaView, dostepne_terminy, GabinetyLekarzaView
+from .views import RezerwacjaView, dostepne_terminy, GabinetyLekarzaView, PacjentListCreateView,    \
+                   PacjentDetailView, LekarzListCreateView, LekarzDetailView, WizytaListCreateView, WizytaDetailView,   \
+                   GabinetListCreateView, GabinetDetailView, RejestracjaView, LoginView, UserInfoView, moje_wizyty,     \
+                   wizyty_lekarza, wizyty_pacjenta, NasiLekarzeView, log_out_view, zajete_terminy_na_dzien,             \
+                   AnulujWizyteView, CheckPeselView, EdytujOpisWizytyView, ZmienStatusWizytyView,      \
+                   EdytujWizyteView, EdytujPolaWizytyView
 
 urlpatterns = [
-
     # Trasy dla Pacjenta
     path('api/pacjenci/', PacjentListCreateView.as_view(), name='pacjent-list-create'),
     path('api/pacjenci/<int:pk>/', PacjentDetailView.as_view(), name='pacjent-detail'),
@@ -40,9 +41,18 @@ urlpatterns = [
 
     path('api/lekarze/<int:lekarz_id>/gabinety/', GabinetyLekarzaView.as_view(), name='gabinety-lekarza'),
 
+    path('api/wizyty/<int:wizyta_id>/edytuj-pola/', EdytujPolaWizytyView.as_view(), name='edytuj-pola-wizyty'),
+
+    path('api/wizyty/<int:wizyta_id>/edytuj/', EdytujWizyteView.as_view(), name='edytuj-wizyte'),
+
     path('api/wizyty/<int:pacjent_id>/pacjent/', wizyty_pacjenta, name='wizyty_pacjenta'),
 
-    path('api/wizyty/<int:wizyta_id>/zmien_status/', zmien_status_wizyty, name='zmien_status_wizyty'),
+    path('api/wizyty/<int:wizyta_id>/anuluj/', AnulujWizyteView.as_view(), name='anuluj-wizyte'),
+
+    path('api/check_pesel/<str:pesel>/', CheckPeselView.as_view(), name='check_pesel'),
+
+    path('api/wizyty/<int:wizyta_id>/edytuj-opis/', EdytujOpisWizytyView.as_view(), name='edytuj_opis_wizyty'),
+    path('api/wizyty/<int:wizyta_id>/zmien_status/', ZmienStatusWizytyView.as_view(), name='zmien_status_wizyty'),
 
     path('api/nasi-lekarze/', NasiLekarzeView.as_view(), name='nasi-lekarze'),
 
