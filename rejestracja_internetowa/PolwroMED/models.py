@@ -124,7 +124,7 @@ class Wizyta(models.Model):
             kolidujace_wizyty_gabinet = Wizyta.objects.filter(
                 gabinet_id=self.gabinet_id,
                 data_i_godzina=self.data_i_godzina,
-                status='Zaplanowana'
+                status='Zaplanowana',
             ).exclude(pk=self.pk)  # Wyklucz obecną wizytę
 
             if kolidujace_wizyty_gabinet.exists():
