@@ -1,6 +1,83 @@
 import React, { useState, useEffect } from 'react';
-import Typography from '@mui/material/Typography';
+import { Typography, Button, TextField, List, ListItem, ListItemText, ListItemSecondaryAction, Select, MenuItem,
+         FormControl, InputLabel, TextareaAutosize, Paper, styled } from '@material-ui/core';
 import axios from 'axios';
+
+const StyledWizytaTextarea = styled('textarea')({
+  width: '100%',
+  height: '30px',
+  padding: '8px',
+  borderRadius: '4px',
+  border: '1px solid #ccc',
+  resize: 'vertical',
+  marginBottom: '8px',
+});
+
+const StyledAppointment = styled('div')({
+  border: '1px solid #ccc',
+  padding: '16px',
+  borderRadius: '8px',
+  margin: '16px 0',
+  justifyContent: 'space-between', // Wyrównaj elementy do krawędzi kontenera
+
+});
+
+const StyledText = styled('div')({
+  textAlign: 'left',
+});
+
+const StyledButtons = styled('div')({
+  marginRight: 'auto',
+});
+
+const StyledDoctorInfoContainer = styled('div')({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  border: '1px solid #ccc',
+  padding: '16px',
+  borderRadius: '8px',
+  width: '50%', // Dostosuj szerokość według potrzeb
+  margin: '0 auto', // Wyśrodkowanie ramki na stronie
+  marginTop: '50px',
+});
+
+const StyledButton = styled(Button)({
+  marginTop: '16px',
+  backgroundColor: '#26a197',
+  width: '30%',
+  alignSelf: 'center'
+});
+
+const StyledButton3 = styled(Button)({
+  marginTop: '16px',
+  backgroundColor: '#26a197',
+  width: '30%',
+});
+
+const StyledButton2 = styled(Button)({
+  marginTop: '16px',
+  width: '30%',
+  alignSelf: 'center'
+});
+
+const StyledSearchContainer = styled('div')({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '8px',
+});
+
+const StyledSelect = styled(Select)({
+  width: '100%', // Dostosuj szerokość według potrzeb
+  marginTop: '8px', // Dostosuj margines według potrzeb
+});
+
+const StyledFormControl = styled(FormControl)({
+  width: '30%', // Dostosuj szerokość według potrzeb
+  marginTop: '8px',
+  marginBottom: '8px',
+});
 
 const PatientPanel = ({ userData }) => {
     const [mojeWizyty, setMojeWizyty] = useState({
@@ -171,105 +248,113 @@ const PatientPanel = ({ userData }) => {
 
     return (
         <div>
-            <Typography variant="h5">Panel Pacjenta</Typography>
-            <p>Imię: {userData.imie}</p>
-            <p>Nazwisko: {userData.nazwisko}</p>
-            <p>Data urodzenia: {userData.data_urodzenia}</p>
-            <p>Adres: {userData.adres}</p>
-            <p>Pesel: {userData.pesel}</p>
-            <p>Inne informacje: {userData.inne_informacje}</p>
-            {!editMode ? (
-                <button onClick={handleEditClick}>Edytuj dane</button>
-            ) : (
-                <div>
-                    <label>
-                        Imię:
-                        <input type="text" name="imie" value={editedData.imie} onChange={handleInputChange} />
-                    </label>
-                    <label>
-                        Nazwisko:
-                        <input type="text" name="nazwisko" value={editedData.nazwisko} onChange={handleInputChange} />
-                    </label>
-                    <label>
-                        Data urodzenia:
-                        <input
-                            type="text"
-                            name="data_urodzenia"
-                            value={editedData.data_urodzenia}
-                            onChange={handleInputChange}
-                        />
-                    </label>
-                    <label>
-                        Adres:
-                        <input type="text" name="adres" value={editedData.adres} onChange={handleInputChange} />
-                    </label>
-                    <label>
-                        Pesel:
-                        <input type="text" name="pesel" value={editedData.pesel} onChange={handleInputChange} />
-                    </label>
-                    <label>
-                        Inne informacje:
-                        <input
-                            type="text"
-                            name="inne_informacje"
-                            value={editedData.inne_informacje}
-                            onChange={handleInputChange}
-                        />
-                        <div style={{ color: 'red' }}>
-                            {validationErrors.imie && <p>{validationErrors.imie}</p>}
-                            {validationErrors.nazwisko && <p>{validationErrors.nazwisko}</p>}
-                            {validationErrors.data_urodzenia && <p>{validationErrors.data_urodzenia}</p>}
-                            {validationErrors.pesel && <p>{validationErrors.pesel}</p>}
-                            {/* ... (inne walidacje) */}
-                        </div>
-                    </label>
-                    <button onClick={handleSaveChanges}>Zapisz zmiany</button>
-                </div>
-            )}
+            <StyledDoctorInfoContainer>
+                <Typography variant="h5">Panel Pacjenta</Typography>
+                <p>Imię: {userData.imie}</p>
+                <p>Nazwisko: {userData.nazwisko}</p>
+                <p>Data urodzenia: {userData.data_urodzenia}</p>
+                <p>Adres: {userData.adres}</p>
+                <p>Pesel: {userData.pesel}</p>
+                <p>Inne informacje: {userData.inne_informacje}</p>
 
-            <div>
+                {!editMode ? (
+                    <StyledButton onClick={handleEditClick}>Edytuj dane</StyledButton>
+                ) : (
+                    <div>
+                        <label>
+                            Imię:
+                            <StyledWizytaTextarea name="imie" value={editedData.imie} onChange={handleInputChange} />
+                        </label>
+                        <label>
+                            Nazwisko:
+                            <StyledWizytaTextarea name="nazwisko" value={editedData.nazwisko} onChange={handleInputChange} />
+                        </label>
+                        <label>
+                            Data urodzenia:
+                            <StyledWizytaTextarea
+                                type="text"
+                                name="data_urodzenia"
+                                value={editedData.data_urodzenia}
+                                onChange={handleInputChange}
+                            />
+                        </label>
+                        <label>
+                            Adres:
+                            <StyledWizytaTextarea type="text" name="adres" value={editedData.adres} onChange={handleInputChange} />
+                        </label>
+                        <label>
+                            Pesel:
+                            <StyledWizytaTextarea type="text" name="pesel" value={editedData.pesel} onChange={handleInputChange} />
+                        </label>
+                        <label>
+                            Inne informacje:
+                            <StyledWizytaTextarea
+                                type="text"
+                                name="inne_informacje"
+                                value={editedData.inne_informacje}
+                                onChange={handleInputChange}
+                            />
+                            <div style={{ color: 'red' }}>
+                                {validationErrors.imie && <p>{validationErrors.imie}</p>}
+                                {validationErrors.nazwisko && <p>{validationErrors.nazwisko}</p>}
+                                {validationErrors.data_urodzenia && <p>{validationErrors.data_urodzenia}</p>}
+                                {validationErrors.pesel && <p>{validationErrors.pesel}</p>}
+                            </div>
+                        </label>
+                        <StyledButton onClick={handleSaveChanges}>Zapisz zmiany</StyledButton>
+                    </div>
+                )}
+            </StyledDoctorInfoContainer>
+
+            <StyledAppointment>
                 <Typography variant="h6">Moje wizyty:</Typography>
-                <div>
+                <StyledAppointment>
                     <Typography variant="subtitle1">Zaplanowane:</Typography>
                     {mojeWizyty.zaplanowane.length === 0 ? (
                         <p>Brak zaplanowanych wizyt.</p>
                     ) : (
                         <ul>
                             {mojeWizyty.zaplanowane.map(wizyta => (
-                            <li key={wizyta.id}>
+                            <StyledAppointment key={wizyta.id}>
                                 Data wizyty: {new Date(wizyta.data_i_godzina).toLocaleString()} | Lekarz: {wizyta.lekarz?.imie} {wizyta.lekarz?.nazwisko} | Specjalizacja lekarza: {wizyta.lekarz?.specjalizacja}
                                 <br />
                                 Opis pacjenta: {editOpisId === wizyta.id ? (
                                     <div>
                                         <input type="text" value={editedOpis} onChange={(e) => setEditedOpis(e.target.value)} />
-                                        <button onClick={() => handleSaveOpis(wizyta.id)}>Zapisz</button>
+                                        <StyledButton onClick={() => handleSaveOpis(wizyta.id)}>Zapisz</StyledButton>
                                     </div>
                                 ) : (
                                     <span>{wizyta.opis || 'Brak danych o opis:'}</span>
                                 )}
                                 {editOpisId !== wizyta.id && (
-                                        <button onClick={() => handleEditOpis(wizyta.id, wizyta.opis)}>
-                                            Edytuj opis
-                                        </button>
+                                        <StyledButtons>
+                                        <StyledButton3 variant="contained" onClick={() => handleEditOpis(wizyta.id, wizyta.opis)}>
+                                        Edytuj opis
+                                        </StyledButton3>
+                                        </StyledButtons>
                                     )}
                                 <br />
                                 Gabinet: {wizyta.gabinet || 'Brak danych o gabinecie'}
                                 {wizyta.status === 'Anulowana' ? <span style={{ color: 'red' }}>Wizyta anulowana</span> : null}
-                                <button onClick={() => handleAnulujWizyte(wizyta.id)}>Anuluj wizytę</button>
+                                <StyledButtons>
+                                <StyledButton3 variant="contained" onClick={() => handleAnulujWizyte(wizyta.id)}>
+                                Anuluj wizytę
+                                </StyledButton3>
+                                </StyledButtons>
 
-                            </li>
+                            </StyledAppointment>
                             ))}
                         </ul>
                     )}
-                </div>
-                <div>
+                </StyledAppointment>
+                <StyledAppointment>
                     <Typography variant="subtitle1">Odbyte:</Typography>
                     {mojeWizyty.odbyte.length === 0 ? (
                         <p>Brak odbytych wizyt.</p>
                     ) : (
                         <ul>
                             {mojeWizyty.odbyte.map(wizyta => (
-                            <li key={wizyta.id}>
+                            <StyledAppointment key={wizyta.id}>
                                 Data wizyty: {new Date(wizyta.data_i_godzina).toLocaleString()} | Lekarz: {wizyta.lekarz?.imie} {wizyta.lekarz?.nazwisko} | Specjalizacja lekarza: {wizyta.lekarz?.specjalizacja}
                                 <br />
                                 Opis pacjenta: {wizyta.opis || 'Brak danych o opis:'}
@@ -281,32 +366,31 @@ const PatientPanel = ({ userData }) => {
                                 Przepisane leki: {wizyta.przepisane_leki || 'Brak przepisanych leków'}
                                 <br />
                                 Notatki lekarza: {wizyta.notatki_lekarza || 'Brak notatek lekarza'}
-                            </li>
+                            </StyledAppointment>
                             ))}
                         </ul>
                     )}
-                </div>
-                <div>
+                </StyledAppointment>
+                <StyledAppointment>
                     <Typography variant="subtitle1">Anulowane:</Typography>
                     {mojeWizyty.anulowane.length === 0 ? (
                         <p>Brak anulowanych wizyt.</p>
                     ) : (
                         <ul>
                             {mojeWizyty.anulowane.map(wizyta => (
-                            <li key={wizyta.id}>
+                            <StyledAppointment key={wizyta.id}>
                                 Data wizyty: {new Date(wizyta.data_i_godzina).toLocaleString()} | Lekarz: {wizyta.lekarz?.imie} {wizyta.lekarz?.nazwisko} | Specjalizacja lekarza: {wizyta.lekarz?.specjalizacja}
                                 <br />
                                 Opis pacjenta: {wizyta.opis || 'Brak danych o opis:'}
                                 <br />
                                 Gabinet: {wizyta.gabinet || 'Brak danych o gabinecie'}
                                 <br />
-                                {/* Dodaj inne informacje specyficzne dla anulowanych wizyt */}
-                            </li>
+                            </StyledAppointment>
                             ))}
                         </ul>
                     )}
-                </div>
-            </div>
+                </StyledAppointment>
+            </StyledAppointment>
         </div>
     );
 };

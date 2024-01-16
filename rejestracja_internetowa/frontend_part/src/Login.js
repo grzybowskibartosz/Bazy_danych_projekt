@@ -16,6 +16,8 @@ const StyledFormContainer = styled('div')({
   width: '50%',
   margin: '0 auto',
   marginTop: '50px',
+  alignSelf: 'center'
+
 });
 
 const StyledForm = styled('form')({
@@ -155,12 +157,8 @@ const Login = () => {
       <StyledFormContainer>
         {loggedIn ? (
           <div>
-            <Typography variant="h5">Jesteś zalogowany</Typography>
             {userInfo.role === 'patient' && <Pacjent userData={userInfo.user_data} />}
             {userInfo.role === 'doctor' && <Lekarz userData={userInfo.user_data} />}
-            <Button variant="contained" color="secondary" onClick={handleLogout} >
-              Wyloguj
-            </Button>
           </div>
         ) : (
           <div>

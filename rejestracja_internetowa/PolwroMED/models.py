@@ -40,6 +40,7 @@ class Pacjent(models.Model):
     def __str__(self):
         return f'{self.imie} {self.nazwisko} {self.pesel} {self.data_urodzenia} {self.adres} ({self.user.username})'
 
+
 class Lekarz(models.Model):
     id = models.AutoField(primary_key=True)
     imie = models.CharField(max_length=50)
